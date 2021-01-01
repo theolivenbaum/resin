@@ -9,7 +9,7 @@ namespace Sir.VectorSpace
     /// <summary>
     /// Read (reduce) postings.
     /// </summary>
-    public class PostingsReader : Reducer, IPostingsReader
+    public class PostingsReader
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly IDictionary<(ulong collectionId, long keyId), Stream> _streams;
@@ -20,7 +20,7 @@ namespace Sir.VectorSpace
             _streams = new Dictionary<(ulong collectionId, long keyId), Stream>();
         }
 
-        protected override IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> offsets)
+        public IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> offsets)
         {
             var time = Stopwatch.StartNew();
             var list = new List<(ulong, long)>();

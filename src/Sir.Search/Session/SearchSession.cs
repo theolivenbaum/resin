@@ -15,18 +15,15 @@ namespace Sir.Search
     {
         private readonly SessionFactory _sessionFactory;
         private readonly IModel _model;
-        private readonly IPostingsReader _postingsReader;
         private readonly ILogger _logger;
 
         public SearchSession(
             SessionFactory sessionFactory,
             IModel model,
-            IPostingsReader postingsReader,
             ILogger logger = null) : base(sessionFactory)
         {
             _sessionFactory = sessionFactory;
             _model = model;
-            _postingsReader = postingsReader;
             _logger = logger ?? sessionFactory.Logger;
         }
 
@@ -54,13 +51,13 @@ namespace Sir.Search
             timer.Restart();
 
             // Map
-            _postingsReader.Map(query);
+            Mapper.Map(query, _sessionFactory);
             _logger.LogDebug($"mapping took {timer.Elapsed}");
             timer.Restart();
 
             // Reduce
             IDictionary<(ulong, long), double> scoredResult = new Dictionary<(ulong, long), double>();
-            _postingsReader.Reduce(query, ref scoredResult);
+            Reducer.Reduce(query, ref scoredResult);
             _logger.LogDebug("reducing took {0}", timer.Elapsed);
             timer.Restart();
 
@@ -170,8 +167,6 @@ namespace Sir.Search
         public override void Dispose()
         {
             base.Dispose();
-
-            _postingsReader.Dispose();
         }
     }
 }

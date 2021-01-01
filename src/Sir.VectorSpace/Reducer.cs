@@ -2,45 +2,9 @@
 
 namespace Sir.VectorSpace
 {
-    public abstract class Reducer
+    public static class Reducer
     {
-        protected abstract IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> postingsOffsets);
-
-        public void Map(Query query)
-        {
-            Map(query.Terms);
-
-            if (query.And != null)
-            {
-                Map(query.And);
-            }
-            if (query.Or != null)
-            {
-                Map(query.Or);
-            }
-            if (query.Not != null)
-            {
-                Map(query.Not);
-            }
-        }
-
-        public void Map(Term term)
-        {
-            if (term.PostingsOffsets == null)
-                return;
-
-            term.Result = Read(term.CollectionId, term.KeyId, term.PostingsOffsets);
-        }
-
-        private void Map(IList<Term> terms)
-        {
-            foreach (var term in terms)
-            {
-                Map(term);
-            }
-        }
-
-        public void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
+        public static void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
             IDictionary<(ulong, long), double> queryResult = new Dictionary<(ulong, long), double>();
 
@@ -117,7 +81,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        public void Reduce(Term term, ref IDictionary<(ulong, long), double> result)
+        public static void Reduce(Term term, ref IDictionary<(ulong, long), double> result)
         {
             if (term.PostingsOffsets == null)
                 return;
@@ -180,7 +144,7 @@ namespace Sir.VectorSpace
             }
         }
 
-        private void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
+        private static void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
         {
             foreach (var term in terms)
             {

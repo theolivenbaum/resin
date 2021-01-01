@@ -398,7 +398,6 @@ namespace Sir.Search
             return new SearchSession(
                 this,
                 model,
-                new PostingsReader(this),
                 Logger);
         }
 
