@@ -6,6 +6,40 @@ namespace Sir.VectorSpace
     {
         protected abstract IList<(ulong, long)> Read(ulong collectionId, long keyId, IList<long> postingsOffsets);
 
+        public void Map(Query query)
+        {
+            Map(query.Terms);
+
+            if (query.And != null)
+            {
+                Map(query.And);
+            }
+            if (query.Or != null)
+            {
+                Map(query.Or);
+            }
+            if (query.Not != null)
+            {
+                Map(query.Not);
+            }
+        }
+
+        public void Map(Term term)
+        {
+            if (term.PostingsOffsets == null)
+                return;
+
+            term.Result = Read(term.CollectionId, term.KeyId, term.PostingsOffsets);
+        }
+
+        private void Map(IList<Term> terms)
+        {
+            foreach (var term in terms)
+            {
+                Map(term);
+            }
+        }
+
         public void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
             IDictionary<(ulong, long), double> queryResult = new Dictionary<(ulong, long), double>();
@@ -88,13 +122,11 @@ namespace Sir.VectorSpace
             if (term.PostingsOffsets == null)
                 return;
 
-            var termResult = Read(term.CollectionId, term.KeyId, term.PostingsOffsets);
-
             if (term.IsIntersection)
             {
                 if (result.Count == 0)
                 {
-                    foreach (var docId in termResult)
+                    foreach (var docId in term.Result)
                     {
                         result.Add(docId, term.Score);
                     }
@@ -103,7 +135,7 @@ namespace Sir.VectorSpace
                 {
                     var intersection = new Dictionary<(ulong, long), double>();
 
-                    foreach (var doc in termResult)
+                    foreach (var doc in term.Result)
                     {
                         double score;
 
@@ -120,14 +152,14 @@ namespace Sir.VectorSpace
             {
                 if (result.Count == 0)
                 {
-                    foreach (var docId in termResult)
+                    foreach (var docId in term.Result)
                     {
                         result.Add(docId, term.Score);
                     }
                 }
                 else
                 {
-                    foreach (var doc in termResult)
+                    foreach (var doc in term.Result)
                     {
                         if (result.ContainsKey(doc))
                         {
@@ -140,7 +172,7 @@ namespace Sir.VectorSpace
             {
                 if (result.Count > 0)
                 {
-                    foreach (var doc in termResult)
+                    foreach (var doc in term.Result)
                     {
                         result.Remove(doc);
                     }

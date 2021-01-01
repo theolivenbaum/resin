@@ -34,7 +34,7 @@ namespace Sir.Search
 
         public SearchResult Search(Query query, int skip, int take)
         {
-            var result = MapReduce(query, skip, take);
+            var result = ScanMapReduceSort(query, skip, take);
 
             if (result != null)
             {
@@ -46,26 +46,28 @@ namespace Sir.Search
             return new SearchResult(query, 0, 0, new Document[0]);
         }
 
-        private ScoredResult MapReduce(Query query, int skip, int take)
+        private ScoredResult ScanMapReduceSort(Query query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
 
-            // Map
-            Map(query);
+            // Scan
+            Scan(query);
+            _logger.LogDebug($"scanning took {timer.Elapsed}");
+            timer.Restart();
 
+            // Map
+            _postingsReader.Map(query);
             _logger.LogDebug($"mapping took {timer.Elapsed}");
             timer.Restart();
 
             // Reduce
             IDictionary<(ulong, long), double> scoredResult = new Dictionary<(ulong, long), double>();
             _postingsReader.Reduce(query, ref scoredResult);
-
             _logger.LogDebug("reducing took {0}", timer.Elapsed);
             timer.Restart();
 
             // Sort
             var sorted = Sort(scoredResult, skip, take);
-
             _logger.LogDebug("sorting took {0}", timer.Elapsed);
 
             return sorted;
@@ -74,7 +76,7 @@ namespace Sir.Search
         /// <summary>
         /// Map query terms to posting list locations.
         /// </summary>
-        private void Map(Query query)
+        private void Scan(Query query)
         {
             if (query == null)
                 return;
