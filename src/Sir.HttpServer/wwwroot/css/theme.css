@@ -1,6 +1,6 @@
 ﻿body {
     padding: 0px 0px 0px 0px;
-    margin: 0px 10px 0px 10px;
+    margin: 10px 10px 0px 10px;
     font-family: Arial, sans-serif;
     font-size: medium;
 }
@@ -12,6 +12,11 @@ h1 {
 h2 {
     margin-top: 12px;
     font-size: 1.4em;
+}
+
+h5{
+    margin-top:1px;
+    margin-bottom:1px;
 }
 
 sup, sub {
@@ -61,6 +66,7 @@ a h1 {
 p {
     margin-top: 15px;
     margin-bottom: 15px;
+    font-size: 10pt;
 }
 
 ul.document-list {
@@ -149,13 +155,13 @@ input[type="checkbox"] {
     vertical-align: sub;
 }
 
-button, input[type="submit"] {
+button, input[type="button"], input[type="submit"] {
     font-size: 9pt;
     height: 25px;
 }
 
 input[type="text"] {
-    height: 19px;
+    height: 18px;
 }
 
 .advanced {
@@ -173,20 +179,15 @@ h3.querystats {
 }
 
 .logo1 {
-    margin-top: 0px;
-    margin-left: 4px;
-    margin-bottom: 10px;
-    font-size: 10pt;
+    font-size: 11pt;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-family: sans-serif;
 }
 
 .logo2 {
-    margin-top: 15px;
-    margin-bottom: 15px;
-    margin-left: 0px;
-    font-size: 23pt;
+    font-size: 24pt;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    font-weight:bold;
+    font-weight: bold;
 }
 
 .search-fields {
@@ -349,4 +350,13 @@ p.splash {
 
 footer p.footer-hero{
     font-size:9pt;
+}
+
+#create-collection-form-url{
+    width:80%;
+    max-width:230px;
+}
+
+#sitelist{
+    width: 95%;
 }

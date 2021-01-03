@@ -8,7 +8,7 @@
     var fileName = "https://commoncrawl.s3.amazonaws.com/" + Context.Request.Query["fileName"].ToString();
     var q = (ViewBag.Q ?? Context.Request.Query["q"]).ToString();
 
-    ViewBag.Title = $"Download WARC - {q} - Resin.Search";
+    ViewBag.Title = $"Download WARC - {q} - CrawlCrawler";
 }
 <form action="/crawl/" method="get">
     <div class="blog-wrapper">
