@@ -2,20 +2,20 @@
 
 namespace Sir.VectorSpace
 {
-    public static class Mapper
+    public static class Resolver
     {
         /// <summary>
-        /// Resolve posting lists and map document IDs to query terms.
+        /// Resolve posting list locations into document IDs.
         /// </summary>
-        public static void Map(Query query, ISessionFactory sessionFactory)
+        public static void Resolve(Query query, ISessionFactory sessionFactory)
         {
             Parallel.ForEach(query.AllTerms(), term =>
             {
-                Map(term, new PostingsReader(sessionFactory));
+                Resolve(term, new PostingsReader(sessionFactory));
             });
         }
 
-        public static void Map(Term term, PostingsReader postingsReader)
+        public static void Resolve(Term term, PostingsReader postingsReader)
         {
             if (term.PostingsOffsets == null)
                 return;

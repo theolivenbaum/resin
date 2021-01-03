@@ -5,7 +5,7 @@ namespace Sir.VectorSpace
     public static class Reducer
     {
         /// <summary>
-        /// Reduce query tree into a list of document IDs.
+        /// Reduce query to a list of document IDs.
         /// </summary>
         public static void Reduce(Query query, ref IDictionary<(ulong, long), double> result)
         {
@@ -84,6 +84,14 @@ namespace Sir.VectorSpace
             }
         }
 
+        public static void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
+        {
+            foreach (var term in terms)
+            {
+                Reduce(term, ref result);
+            }
+        }
+
         public static void Reduce(Term term, ref IDictionary<(ulong, long), double> result)
         {
             if (term.PostingsOffsets == null)
@@ -144,14 +152,6 @@ namespace Sir.VectorSpace
                         result.Remove(doc);
                     }
                 }
-            }
-        }
-
-        private static void Reduce(IList<Term> terms, ref IDictionary<(ulong Key, long Value), double> result)
-        {
-            foreach (var term in terms)
-            {
-                Reduce(term, ref result);
             }
         }
     }

@@ -29,7 +29,7 @@ namespace Sir.Search
 
         public SearchResult Search(Query query, int skip, int take)
         {
-            var result = ScanMapReduceSort(query, skip, take);
+            var result = ScanResolveReduceSort(query, skip, take);
 
             if (result != null)
             {
@@ -41,7 +41,7 @@ namespace Sir.Search
             return new SearchResult(query, 0, 0, new Document[0]);
         }
 
-        private ScoredResult ScanMapReduceSort(Query query, int skip, int take)
+        private ScoredResult ScanResolveReduceSort(Query query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();
 
@@ -50,9 +50,9 @@ namespace Sir.Search
             _logger.LogDebug($"scanning took {timer.Elapsed}");
             timer.Restart();
 
-            // Map
-            Mapper.Map(query, _sessionFactory);
-            _logger.LogDebug($"mapping took {timer.Elapsed}");
+            // Resolve
+            Resolver.Resolve(query, _sessionFactory);
+            _logger.LogDebug($"resolving took {timer.Elapsed}");
             timer.Restart();
 
             // Reduce
@@ -69,7 +69,7 @@ namespace Sir.Search
         }
 
         /// <summary>
-        /// Map posting list locations to query terms.
+        /// Score each term and find their posting list locations.
         /// </summary>
         private void Scan(Query query)
         {

@@ -12,7 +12,7 @@ namespace Sir.VectorSpace
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
         public object Label => Vector.Label;
-        public IList<(ulong, long)> Result { get; set; }
+        public IList<(ulong collectionId, long documentId)> Result { get; set; }
 
         public Term(
             ulong collectionId,
