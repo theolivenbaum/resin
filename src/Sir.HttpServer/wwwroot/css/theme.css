@@ -8,17 +8,30 @@
 }
 
 h1 {
-    font-size: 1.7em;
+    margin-top: 10px;
+    margin-bottom: 16px;
+    font-size: 18pt;
 }
 
 h2 {
-    margin-top: 12px;
-    font-size: 1.4em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 12pt;
 }
 
-h4,h5{
+h3 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+h4{
     margin-top:10px;
     margin-bottom:10px;
+}
+
+h5 {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 sup, sub {
@@ -173,13 +186,6 @@ input[type="text"] {
     margin-left: 2px;
 }
 
-h3.querystats {
-    margin-left: 1px;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    font-size: 10pt;
-}
-
 .logo1{
     float:left;
 }
@@ -225,6 +231,7 @@ input[type="text"].collection {
 .input-wrapper {
     height: 25px;
     width: 100%;
+    margin-top: 10px;
 }
 
 input[type="text"].q {
@@ -356,8 +363,7 @@ footer p.footer-hero{
 }
 
 #create-collection-form-url{
-    width:80%;
-    max-width:230px;
+    width:68%;
 }
 
 #sitelist{

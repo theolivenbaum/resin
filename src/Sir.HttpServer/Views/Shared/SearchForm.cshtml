@@ -16,28 +16,6 @@
 
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
-<fieldset class="search-fields">
-    <legend>Collections</legend>
-    @{
-        var defaultCollectionCheck = !submittedCollections.Any();
-        foreach (var collection in collections)
-        {
-            var check = defaultCollectionCheck ? "checked" : submittedCollections.Contains(collection) ? "checked" : "";
-            <label><input type="checkbox" name="collection" id="collection" value="@collection" @check />@collection</label>
-        }
-    }
-</fieldset>
-<fieldset class="search-fields">
-    <legend>Fields</legend>
-    @{
-        var defaultFieldCheck = !submittedFields.Any();
-        foreach (var field in fields)
-        {
-            var check = defaultFieldCheck ? "checked" : submittedFields.Contains(field) ? "checked" : "";
-            <label><input type="checkbox" name="field" id="@field" value="@field" @check />@field</label>
-        }
-    }
-</fieldset><br style="clear:both;"/>
     <div class="input-wrapper">
         <div class="q">
             <input type="text" id="q" name="q" class="q" placeholder="Keywords or phrase" value="@query" />
