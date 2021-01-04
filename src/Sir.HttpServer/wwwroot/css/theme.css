@@ -21,7 +21,7 @@ h4,h5{
 
 sup, sub {
     font-size: x-small;
-    color: orangered;
+    color: #ff6200;
     font-weight: 600;
 }
 
@@ -32,7 +32,7 @@ label {
 
 a {
     text-decoration: none;
-    color: orangered;
+    color: #ff6200;
 }
 
 a.result-link {
@@ -50,11 +50,11 @@ a.warc-link {
     padding-right: 3px;
 }
 
-    a.warc-link:visited {
-        color: black;
-        text-decoration: none;
-        padding-right: 3px;
-    }
+a.warc-link:visited {
+    color: black;
+    text-decoration: none;
+    padding-right: 3px;
+}
 
 a:visited h1 {
 }
@@ -85,7 +85,7 @@ ul.document-list li {
 
 .sub {
     font-size: 0.2em;
-    color: orangered;
+    color: #ff6200;
     margin-left: 2px;
     margin-right: 2px;
 }
@@ -104,7 +104,7 @@ footer {
 
 footer a {
     text-decoration: none;
-    color: orangered;
+    color: #ff6200;
 }
 
 .footer-nav {
@@ -165,7 +165,7 @@ input[type="text"] {
 }
 
 .advanced {
-    color: orangered;
+    color: #ff6200;
     font-size: 0.7em;
     margin-top: 10px;
     margin-left: 2px;
@@ -178,16 +178,14 @@ h3.querystats {
     font-size: 10pt;
 }
 
-.logo1 {
-    font-size: 11pt;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    font-family: sans-serif;
+.logo1 img {
+    height: auto;
+    width: 45px;
 }
 
-.logo2 {
-    font-size: 24pt;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    font-weight: bold;
+.logo2 img{
+    height:auto;
+    width:65px;
 }
 
 .search-fields {
@@ -212,7 +210,7 @@ h3.querystats {
 
 input[type="text"].collection {
     padding: 10px 10px 10px 10px;
-    color: orangered;
+    color: #ff6200;
     font-size: xx-large;
     font-weight: 700;
     border: none;
