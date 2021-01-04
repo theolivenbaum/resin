@@ -14,9 +14,9 @@ h2 {
     font-size: 1.4em;
 }
 
-h5{
-    margin-top:1px;
-    margin-bottom:1px;
+h4,h5{
+    margin-top:10px;
+    margin-bottom:10px;
 }
 
 sup, sub {

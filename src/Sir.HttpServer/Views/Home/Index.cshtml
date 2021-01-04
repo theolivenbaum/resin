@@ -5,9 +5,9 @@
 <form action="/crawl/@Context.Request.QueryString" method="post">
     <div id="create-collection-form">
         <h4>Build your own web search (pay as you go)</h4>
-        <h5>Terms</h5>
+        <a name="terms"></a><h5>Terms</h5>
         <p>
-            It's free to create as many search indices here as you want.
+            You can create as many search indices here as you want to and it's free.
             Note, a search index can contain multiple sites, as many as you want.
         </p>
         <p>
@@ -15,7 +15,7 @@
             The fee is <strong>$4.99 per month</strong> per index.
         </p>
         <p>
-            You are anonymous until you decide to keep an index,
+            You are anonymous until you decide to keep an index for more than 30 days,
             whereby we shall require a valid email address from you, 
             so that we can send you payment instructions.
         </p>
@@ -26,11 +26,11 @@
         <p>
             <label>
                 <input type="radio" id="scope" name="scope" value="page" checked />
-                Only this URL.
+                Only this URL
             </label>
             <label>
                 <input type="radio" id="scope" name="scope" value="directory" />
-                This site or directory.
+                This site or directory
             </label>
         </p>
         <p>
@@ -44,6 +44,10 @@
             </select>
         </p>
         <p>
+            <label>
+                <input type="checkbox" name="agree" id="agree" value="yes" />
+                I have read and agree to the <a href="#terms">terms</a>.
+            </label>
             <input type="submit" value="Create search index" />
         </p>
     </div>
