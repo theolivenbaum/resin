@@ -3,6 +3,8 @@
     margin: 10px 10px 0px 10px;
     font-family: Arial, sans-serif;
     font-size: medium;
+    background-color:black;
+    color:white;
 }
 
 h1 {
@@ -27,7 +29,6 @@ sup, sub {
 
 label {
     font-size: 10pt;
-    color: black;
 }
 
 a {
@@ -36,24 +37,12 @@ a {
 }
 
 a.result-link {
-    font-size: 12pt;
-    color: mediumblue;
+    font-size: 11pt;
+    color: white;
 }
 
 a.result-link:visited {
-    color: purple;
-}
-
-a.warc-link {
-    color: black;
-    text-decoration: none;
-    padding-right: 3px;
-}
-
-a.warc-link:visited {
-    color: black;
-    text-decoration: none;
-    padding-right: 3px;
+    color: silver;
 }
 
 a:visited h1 {
@@ -135,7 +124,7 @@ div.upvote {
 
 .document-body {
     margin-left: 0px;
-    margin-bottom: 15px;
+    margin-bottom: 17px;
     margin-top: 4px;
 }
 
@@ -158,10 +147,16 @@ input[type="checkbox"] {
 button, input[type="button"], input[type="submit"] {
     font-size: 9pt;
     height: 25px;
+    background-color: #262626;
+    border: 1px solid #f0f0f0;
+    color: white;
 }
 
 input[type="text"] {
-    height: 18px;
+    height: 21px;
+    background-color: black;
+    border: 1px solid #f0f0f0;
+    color: white;
 }
 
 .advanced {
@@ -200,12 +195,10 @@ h3.querystats {
     padding-top: 10px;
     padding-bottom: 5px;
     float: left;
-    background-color: #fafafa;
 }
 
 .search-fields a {
     text-decoration: underline;
-    color: black;
 }
 
 input[type="text"].collection {
@@ -313,7 +306,6 @@ div.buttons {
     margin-left: 0px;
     margin-bottom: 10px;
     margin-top: 15px;
-    color: black;
     font-size:10pt;
 }
 
