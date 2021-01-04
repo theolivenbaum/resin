@@ -187,14 +187,12 @@ input[type="text"] {
 }
 
 .logo1{
-    float:left;
 }
 .logo2 {
-    float: left;
     font-size: 11pt;
     color: #ff7700;
-    margin-left: 20px;
-    margin-top: 20px;
+    font-style: italic;
+    text-shadow: 0px 1px 1px #404040;
 }
 
 .logo1 img {

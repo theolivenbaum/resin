@@ -4,10 +4,11 @@
 }
 <form action="/crawl/@Context.Request.QueryString" method="post">
     <div id="create-collection-form">
+        <p class="logo2">A pay-as-you-go search service from CrawlCrawler.</p>
         <h1>Create your own web search engine</h1>
         <h2>Add sites</h2>
         <p>
-            Add just a couple of sites to start with. You can always add more later and you can always remove those that you are no longer interested in.
+            Add a small number of sites to start with. You can always add more later and removing sites that you are no longer interested in is easy.
         </p>
         <p>
             <label>
@@ -21,7 +22,7 @@
         </p>
         <p>
             <label>
-                https:// <input type="text" placeholder="mysite.com" id="create-collection-form-url" name="url" /><input type="button" value="Add" />
+                <span style="color: #949494;">https://</span> <input type="text" placeholder="mysite.com" id="create-collection-form-url" name="url" /><input type="button" value="Add" />
             </label>
         </p>
         <p>
@@ -34,8 +35,9 @@
                 <input type="checkbox" name="agree" id="agree" value="yes" />
                 I have read and agree to the <a href="/terms">terms</a>.
             </label>
+        </p>
+        <p>
             <input type="submit" value="Create search index" />
         </p>
     </div>
-
 </form>
