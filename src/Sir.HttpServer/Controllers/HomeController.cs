@@ -18,26 +18,14 @@ namespace Sir.HttpServer.Controllers
             return View();
         }
 
-        [Route("/instructions")]
-        public ActionResult Instructions()
+        [Route("/terms")]
+        public ActionResult Terms()
         {
             return View();
         }
 
-        [Route("/contact")]
-        public ActionResult Contact()
-        {
-            return View();
-        }
-
-        [Route("/wet")]
-        public ActionResult Wet()
-        {
-            return View();
-        }
-
-        [Route("/warc")]
-        public ActionResult Warc()
+        [Route("/about")]
+        public ActionResult About()
         {
             return View();
         }

@@ -1,0 +1,24 @@
+﻿@{
+    Layout = "~/Views/_LayoutStart.cshtml";
+    ViewBag.Title = "CrawlCrawler";
+}
+<form action="/crawl/@Context.Request.QueryString" method="post">
+    <div id="create-collection-form">
+        <h3>Terms</h3>
+        <p>
+            CrawlCrawler is a pay-as-you-go search service that gives you the power to decide which web sites to include in your search.
+        </p>
+        <p>
+            You may create as many search indices here as you want for free.
+            Note, a search index can contain multiple sites, as many as you want.
+        </p>
+        <p>
+            If you are still using your index 30 days after creating it and you want to continue doing so, 
+            we will require upon you a small fee of <strong>$4.99 per month</strong>.
+        </p>
+        <p>
+            You are completely 100% anonymous to us.
+        </p>
+    </div>
+
+</form>

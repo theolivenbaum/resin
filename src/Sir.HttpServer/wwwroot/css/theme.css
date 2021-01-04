@@ -23,7 +23,7 @@ h4,h5{
 
 sup, sub {
     font-size: x-small;
-    color: #ff6200;
+    color: #ff7700;
     font-weight: 600;
 }
 
@@ -33,7 +33,7 @@ label {
 
 a {
     text-decoration: none;
-    color: #ff6200;
+    color: #ff7700;
 }
 
 a.result-link {
@@ -74,7 +74,7 @@ ul.document-list li {
 
 .sub {
     font-size: 0.2em;
-    color: #ff6200;
+    color: #ff7700;
     margin-left: 2px;
     margin-right: 2px;
 }
@@ -93,7 +93,7 @@ footer {
 
 footer a {
     text-decoration: none;
-    color: #ff6200;
+    color: #ff7700;
 }
 
 .footer-nav {
@@ -118,14 +118,15 @@ div.upvote {
     float: left;
 }
 
-.medium-text {
+.document-info{
     font-size: 9pt;
+    color:silver;
 }
 
 .document-body {
     margin-left: 0px;
-    margin-bottom: 17px;
-    margin-top: 4px;
+    margin-bottom: 20px;
+    margin-top: 5px;
 }
 
 .document-stats{
@@ -166,7 +167,7 @@ input[type="text"] {
 }
 
 .advanced {
-    color: #ff6200;
+    color: #ff7700;
     font-size: 0.7em;
     margin-top: 10px;
     margin-left: 2px;
@@ -179,14 +180,20 @@ h3.querystats {
     font-size: 10pt;
 }
 
+.logo1{
+    float:left;
+}
+.logo2 {
+    float: left;
+    font-size: 11pt;
+    color: #ff7700;
+    margin-left: 20px;
+    margin-top: 20px;
+}
+
 .logo1 img {
     height: auto;
     width: 55px;
-}
-
-.logo2 img{
-    height:auto;
-    width:55px;
 }
 
 .search-fields {
@@ -209,7 +216,7 @@ h3.querystats {
 
 input[type="text"].collection {
     padding: 10px 10px 10px 10px;
-    color: #ff6200;
+    color: #ff7700;
     font-size: xx-large;
     font-weight: 700;
     border: none;
@@ -312,7 +319,7 @@ div.buttons {
     margin-left: 0px;
     margin-bottom: 10px;
     margin-top: 15px;
-    font-size:10pt;
+    font-size:8pt;
 }
 
 .blog-wrapper {

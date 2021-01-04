@@ -1,12 +1,4 @@
-﻿@{
-    var submittedCollections = new HashSet<string>(Context.Request.Query["collection"]
-        .ToArray()
-        .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries))
-        .ToArray());
-
-    var collections = new HashSet<string>(submittedCollections.Concat((IEnumerable<string>)ViewBag.DefaultCollection));
-}
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
@@ -16,12 +8,16 @@
 </head>
 <body>
     <div class="outer-container">
-        <span class="logo1"><a href="/?collection=@string.Join(",", collections)"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a></span>
+        <div class="logo1">
+            <a href="/"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+        </div>
+        <div class="logo2">A pay-as-you-go search service</div>
+        <br style="clear:both;"/>
         @RenderBody()
     </div>
     <footer>
         <div class="footer-nav">
-            <p><a href="https://github.com/kreeben/resin/discussions">Discuss</a> | <a href="https://github.com/kreeben/resin/issues">Report issue</a></p>
+            <p><a href="/about">About</a> | <a href="https://github.com/kreeben/resin/discussions">Discuss</a> | <a href="https://github.com/kreeben/resin/issues">Report issue</a> | <a href="/terms">Terms</a></p>
         </div>
     </footer>
 </body>

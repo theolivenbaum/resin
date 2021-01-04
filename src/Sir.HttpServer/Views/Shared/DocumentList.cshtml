@@ -35,10 +35,10 @@
                     </div>
                     <div class="document-body">
                         <div>
-                            <a class="document-subtitle" href="@uri.Scheme://@host"><span class="medium-text">@Html.Raw(uri.Scheme)://@Html.Raw(host)</span></a><a class="document-subtitle" href="@uri.Scheme://@path"><span class="medium-text">@Html.Raw(uri.LocalPath)</span></a>
+                            <a class="document-subtitle" href="@uri.Scheme://@host"><span class="document-info">@Html.Raw(uri.Scheme)://@Html.Raw(host)</span></a><a class="document-subtitle" href="@uri.Scheme://@path"><span class="medium-text">@Html.Raw(uri.LocalPath)</span></a>
                         </div>
                         <div class="document-stats">
-                            <span class="medium-text">Score: @score.ToString("0.##")%</span>
+                            <span class="document-info">Score: @score.ToString("0.##")%</span>
                         </div>
                     </div>
                 </li>
