@@ -152,6 +152,12 @@ button, input[type="button"], input[type="submit"] {
     color: white;
 }
 
+select {
+    background-color: black;
+    border: 1px solid #f0f0f0;
+    color: white;
+}
+
 input[type="text"] {
     height: 21px;
     background-color: black;
@@ -175,12 +181,12 @@ h3.querystats {
 
 .logo1 img {
     height: auto;
-    width: 45px;
+    width: 55px;
 }
 
 .logo2 img{
     height:auto;
-    width:65px;
+    width:55px;
 }
 
 .search-fields {
