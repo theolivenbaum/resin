@@ -1,0 +1,44 @@
+﻿@{
+    Layout = "~/Views/_LayoutStart.cshtml";
+    ViewBag.Title = "CrawlCrawler";
+}
+<form action="/create" method="post">
+    <div id="create-collection-form">
+        <p class="logo2">Pay-as-you-go search service from CrawlCrawler</p>
+        <h1>Create your own web search engine</h1>
+        <p>
+            Start by adding a small number of sites to your search index.
+            You can always add more later. Also, removing sites that you are no longer interested in is always easy.
+        </p>
+        <h2>Add sites</h2>
+        <p>
+            <label>
+                <input type="radio" id="scope" name="scope" value="page" checked />
+                Only this URL
+            </label>
+            <label>
+                <input type="radio" id="scope" name="scope" value="directory" />
+                This site or directory
+            </label>
+        </p>
+        <p>
+            <label>
+                <span style="color: #949494;">https://</span> <input type="text" placeholder="mysite.com" id="create-collection-form-url" name="url" /><input type="button" value="Add" />
+            </label>
+        </p>
+        <p>
+            <select multiple id="sitelist">
+                <option>https://en.wikipedia.org</option>
+            </select>
+        </p>
+        <p>
+            <label>
+                <input type="checkbox" name="agree" id="agree" value="yes" />
+                I have read and agree to the <a href="/terms">terms</a>.
+            </label>
+        </p>
+        <p>
+            <input type="submit" value="Create search index" />
+        </p>
+    </div>
+</form>

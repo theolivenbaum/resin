@@ -14,7 +14,7 @@ h1 {
 }
 
 h2 {
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 10px;
     font-size: 12pt;
 }
@@ -99,7 +99,7 @@ ul.document-list li {
 
 footer {
     font-size: 10pt;
-    margin-top: 15px;
+    margin-top: 30px;
     margin-bottom: 30px;
     max-width: 500px;
 }
@@ -360,12 +360,17 @@ footer p.footer-hero{
     font-size:9pt;
 }
 
-#create-collection-form-url{
-    width: 65%;
-    max-width: 512px;
+#siteurl {
+    width: 80%;
 }
 
-#sitelist{
-    width: 90%;
-    max-width: 600px;
+#sitelist {
+    border: 1px solid white;
+    font-size: 10pt;
+    width: 80%;
+    min-height:100px;
+}
+
+.inner-container {
+    padding: 5px 5px 5px 5px;
 }
