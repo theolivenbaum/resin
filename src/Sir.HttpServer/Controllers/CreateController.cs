@@ -13,6 +13,16 @@ namespace Sir.HttpServer.Controllers
         {
         }
 
+        [HttpGet("/addurl")]
+        public ActionResult AddUrl(string url)
+        {
+            var urlList = Request.Query["urls"].ToList();
+            urlList.Add(url);
+            var queryString = $"?urls={string.Join("&urls=", urlList)}";
+            var returnUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{queryString}";
+            return Redirect(returnUrl);
+        }
+
         [HttpPost("/create")]
         public ActionResult Index([FromForm]CreateModel model)
         {
