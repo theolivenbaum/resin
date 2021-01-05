@@ -23,11 +23,5 @@ namespace Sir.HttpServer.Controllers
         {
             return View();
         }
-
-        [Route("/about")]
-        public ActionResult About()
-        {
-            return View();
-        }
     }
 }
