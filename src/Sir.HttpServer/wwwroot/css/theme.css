@@ -98,26 +98,6 @@ ul.document-list li {
     margin-top: 15px;
 }
 
-footer {
-    font-size: 10pt;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    max-width: 500px;
-}
-
-footer a {
-    text-decoration: none;
-    color: #ff7700;
-}
-
-.footer-nav {
-    color: silver;
-}
-
-footer p {
-    margin-top: 10px;
-}
-
 pre, .pre {
     background-color: #d4d4d4;
     padding: 0px 5px 5px 0px;
@@ -162,7 +142,7 @@ input[type="checkbox"] {
 button, input[type="button"], input[type="submit"] {
     font-size: 9pt;
     height: 32px;
-    background-color: #2e2e2e;
+    background-color: #383838;
     border: 1px solid #f0f0f0;
     color: white;
 }
@@ -174,7 +154,7 @@ select {
 }
 
 input[type="text"] {
-    height: 21px;
+    height: 20px;
     background-color: black;
     border: 1px solid #f0f0f0;
     color: white;
@@ -359,6 +339,26 @@ p.splash {
 
 footer p.footer-hero{
     font-size:9pt;
+}
+
+footer {
+    font-size: 10pt;
+    margin-top: 40px;
+    margin-bottom: 30px;
+    max-width: 500px;
+}
+
+footer a {
+    text-decoration: none;
+    color: #ff7700;
+}
+
+.footer-nav {
+    color: silver;
+}
+
+footer p {
+    margin-top: 10px;
 }
 
 #siteurl {
