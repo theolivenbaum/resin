@@ -145,6 +145,7 @@ button, input[type="button"], input[type="submit"] {
     background-color: #383838;
     border: 1px solid #f0f0f0;
     color: white;
+    vertical-align: middle;
 }
 
 select {
@@ -167,8 +168,10 @@ input[type="text"] {
     margin-left: 2px;
 }
 
-.logo1{
-    margin-bottom:10px;
+.logo1 {
+    margin-bottom: 10px;
+    width: 55px;
+    height: 55px;
 }
 .intro {
     font-size: 10pt;
@@ -180,6 +183,7 @@ input[type="text"] {
 .logo1 img {
     height: auto;
     width: 55px;
+    height: 55px;
 }
 
 .search-fields {
@@ -364,6 +368,7 @@ footer p {
 #siteurl {
     width: 80%;
     padding: 5px 5px 5px 5px;
+    vertical-align:middle;
 }
 
 #sitelist {
