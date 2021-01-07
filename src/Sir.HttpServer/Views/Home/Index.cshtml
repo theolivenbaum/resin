@@ -1,15 +1,21 @@
-﻿@{
+﻿@model Sir.HttpServer.Controllers.CreateModel
+@{
     Layout = "~/Views/_LayoutStart.cshtml";
     ViewBag.Title = "CrawlCrawler";
 }
 @{
     var queryString = Context.Request.QueryString;
-    var action = $"/addurl{queryString}";
     var urlList = Context.Request.Query["urls"].ToList();
+
+    if (urlList.Count == 0)
+    {
+        urlList.Add("https://en.wikipedia.org");
+    }
 }
-<form action="@action" method="get">
-    <div id="create-collection-form">
-        <span class="intro">A pay-as-you-go search service from CrawlCrawler:</span>
+<div id="create-collection-form">
+    <form action="/addurl" method="get">
+
+        <span class="intro">A pay-as-you-go search service from CrawlCrawler</span>
         <h1>Create your own personal web search engine</h1>
         <p>
             Add your favorite pages and sites to a search index that you command over.
@@ -27,26 +33,32 @@
             </label>
         </p>
         <div>
+            @if (Model != null)
+            {
+                <span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span>
+            }
             <label>
                 <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
             </label>
             <div id="sitelist">
-                https://en.wikipedia.org (site)<br />
-                https://mysite.com/mypage.htm (page)
+                @foreach (var url in urlList)
+                {
+                <span>@url</span><br />
+                }
             </div>
         </div>
-        <p>
-            <label>
-                <input type="checkbox" name="agree" id="agree" value="yes" />
-                I have read and agree to the <a href="/terms">terms of use</a>.
-            </label>
-        </p>
-        <p>
-            <input type="submit" id="create" name="create" value="Create search index" />
-        </p>
-    </div>
-    @foreach(var url in urlList)
-    {
-        <input type="hidden" name="urls" value="@url" />
-    }
-</form>
+        @foreach (var url in urlList)
+        {
+            <input type="hidden" name="urls" value="@url" />
+        }
+    </form>
+    <p>
+        <label>
+            <input type="checkbox" name="agree" id="agree" value="yes" />
+            I have read and agree to the <a href="/terms">terms of use</a>.
+        </label>
+    </p>
+    <p>
+        <input type="submit" id="create" name="create" value="Create search index" />
+    </p>
+</div>

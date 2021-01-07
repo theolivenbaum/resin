@@ -52,8 +52,6 @@ namespace Sir.HttpServer
             IHostApplicationLifetime applicationLifetime, 
             IWebHostEnvironment env)
         {
-            app.UseMiddleware<ErrorLoggingMiddleware>();
-
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             if (env.IsDevelopment())
@@ -72,39 +70,6 @@ namespace Sir.HttpServer
         private void OnShutdown()
         {
             ((SessionFactory)ServiceProvider.GetService(typeof(SessionFactory))).Dispose();
-        }
-    }
-
-    public class ErrorLoggingMiddleware
-    {
-        private readonly RequestDelegate _next;
-
-        public ErrorLoggingMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
-        public async Task Invoke(HttpContext context)
-        {
-            try
-            {
-                await _next(context);
-            }
-            catch (Exception e)
-            {
-                var dir = Path.Combine(Directory.GetCurrentDirectory(), "log");
-
-                if (!Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-
-                File.AppendAllText(
-                    Path.Combine(dir, "sir.httpserver.log.txt"), 
-                    $"{Environment.NewLine}{DateTime.Now} {e}{Environment.NewLine}");
-
-                throw;
-            }
         }
     }
 }

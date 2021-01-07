@@ -16,10 +16,27 @@ namespace Sir.HttpServer.Controllers
         [HttpGet("/addurl")]
         public ActionResult AddUrl(string url)
         {
+            try
+            {
+                var uri = new Uri(url);
+            }
+            catch (Exception ex)
+            {
+                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = ex.Message });
+            }
+
             var urlList = Request.Query["urls"].ToList();
+
+            if (urlList.Count == 0)
+            {
+                urlList.Add("https://en.wikipedia.org");
+            }
+
             urlList.Add(url);
-            var queryString = $"?urls={string.Join("&urls=", urlList)}";
+
+            var queryString = $"?urls={string.Join("&urls=", urlList.Select(s=>Uri.EscapeDataString(s)))}";
             var returnUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{queryString}";
+
             return Redirect(returnUrl);
         }
 
@@ -32,7 +49,6 @@ namespace Sir.HttpServer.Controllers
 
     public class CreateModel
     {
-        [FromForm(Name = "sitelist")]
-        public IList<string> SiteList { get; set; }
+        public string ErrorMessage { get; set; }
     }
 }
