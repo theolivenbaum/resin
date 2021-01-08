@@ -4,38 +4,44 @@
     ViewBag.Title = "CrawlCrawler";
 }
 @{
-    var queryString = Context.Request.QueryString;
     var urlList = Context.Request.Query["urls"].ToList();
 
     if (urlList.Count == 0)
     {
-        urlList.Add("https://en.wikipedia.org");
+        urlList.Add("site://en.wikipedia.org");
+    }
+
+    var queryString = Context.Request.QueryString.ToString();
+
+    if (!queryString.StartsWith("?"))
+    {
+        queryString = $"?{queryString}";
     }
 }
 <div id="create-collection-form">
     <form action="/addurl" method="get">
 
-        <span class="intro">A pay-as-you-go search service from CrawlCrawler</span>
-        <h1>Create your own personal web search engine</h1>
+        <span class="intro">A pay-as-you-go search service</span>
+        <h1>Create your own personal search engine</h1>
         <p>
-            Add your favorite pages and sites to a search index that you command over.
-            You can add more sites and pages later and removing pages that you are not interested in has been made very easy.
+            Add some of your favorite pages and sites to a search index that you command over.
+            You can add more sites and pages later and excluding that which you are not interested in has been made very easy.
         </p>
-        <h2>Add sites</h2>
+        <h2>Add URL</h2>
         <p>
             <label>
                 <input type="radio" id="scope" name="scope" value="page" checked />
                 Single page
             </label>
             <label>
-                <input type="radio" id="scope" name="scope" value="directory" />
+                <input type="radio" id="scope" name="scope" value="site" />
                 Site or directory
             </label>
         </p>
         <div>
-            @if (Model != null)
+            @if (Model != null && Model.ErrorMessage != null)
             {
-                <span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span>
+            <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
             }
             <label>
                 <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
@@ -43,7 +49,8 @@
             <div id="sitelist">
                 @foreach (var url in urlList)
                 {
-                <span>@url</span><br />
+                    var href = $"/deleteurl{queryString}&url={url}";
+                    <a href="@href">@url</a><br />
                 }
             </div>
         </div>
@@ -52,13 +59,19 @@
             <input type="hidden" name="urls" value="@url" />
         }
     </form>
-    <p>
-        <label>
-            <input type="checkbox" name="agree" id="agree" value="yes" />
-            I have read and agree to the <a href="/terms">terms of use</a>.
-        </label>
-    </p>
-    <p>
-        <input type="submit" id="create" name="create" value="Create search index" />
-    </p>
+    <form action="/createindex" method="get">
+        <p>
+            <label>
+                <input type="checkbox" name="agree" id="agree" value="yes" />
+                I have read and agree to the <a href="/terms">terms of use</a>.
+            </label>
+        </p>
+        <p>
+            <input type="submit" id="create" name="create" value="Create search index" />
+        </p>
+        @foreach (var url in urlList)
+        {
+            <input type="hidden" name="urls" value="@url" />
+        }
+    </form>
 </div>
