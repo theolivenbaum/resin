@@ -32,18 +32,25 @@ namespace Sir.Search
             Fields = new List<Field>();
         }
 
-        public Document(IList<Field> fields, long documentId = -1, double score = -1)
+        public Document(IEnumerable<Field> fields, long documentId = -1, double score = -1)
         {
-            Fields = fields;
+            _id = documentId;
             Id = documentId;
             Score = score;
-            _id = documentId;
 
-            if (_id > -1)
+            if (fields is IList<Field>)
             {
+                Fields = (IList<Field>)fields;
+            }
+            else
+            {
+                Fields = new List<Field>();
+
                 foreach (var field in Fields)
                 {
                     field.DocumentId = _id;
+
+                    Fields.Add(field);
                 }
             }
         }

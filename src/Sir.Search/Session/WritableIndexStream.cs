@@ -9,16 +9,19 @@ namespace Sir.Search
 {
     public class WritableIndexStream : IDisposable
     {
+        private readonly string _directory;
         private readonly ulong _collectionId;
         private readonly SessionFactory _sessionFactory;
         private readonly ILogger _logger;
         private readonly IDictionary<(long keyId, string fileExtension), Stream> _streams;
 
         public WritableIndexStream(
+            string directory,
             ulong collectionId, 
             SessionFactory sessionFactory, 
             ILogger logger = null)
         {
+            _directory = directory;
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
             _logger = logger;
@@ -59,7 +62,7 @@ namespace Sir.Search
 
             if (!_streams.TryGetValue(key, out stream))
             {
-               stream = _sessionFactory.CreateAppendStream(_collectionId, keyId, fileExtension);
+               stream = _sessionFactory.CreateAppendStream(_directory, _collectionId, keyId, fileExtension);
                 _streams.Add(key, stream);
             }
 

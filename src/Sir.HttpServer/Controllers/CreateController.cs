@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sir.Search;
+using Sir.VectorSpace;
 using System;
+using System.IO;
 using System.Linq;
 
 namespace Sir.HttpServer.Controllers
@@ -41,7 +43,33 @@ namespace Sir.HttpServer.Controllers
             if (urls.Length == 0 || urls[0] == null)
                 return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = "URL list is empty." });
 
-            return Redirect("https://google.se");
+            var queryId = Guid.NewGuid().ToString();
+            var userDirectory = Path.Combine(Config.Get("user_dir"), queryId);
+
+            if (!Directory.Exists(userDirectory))
+            {
+                Directory.CreateDirectory(userDirectory);
+            }
+
+            var model = new BagOfCharsModel();
+            var tree = new VectorNode();
+            var collectionId = "query".ToHash();
+
+            SessionFactory.Write(
+                userDirectory,
+                collectionId,
+                urls.Select(url => new Document(new Field[] { new Field("url", url, index: true, store: true) })),
+                model);
+
+            for (int i = 0;i < urls.Length;i++)
+            {
+                foreach (var vector in model.Tokenize(urls[i]))
+                {
+                    tree.MergeOrAddConcurrent(new VectorNode(vector: vector, docId: i), model);
+                }
+            }
+
+            return RedirectToAction("Index", "Search", new { queryId, field = new string[] { "title", "text" } });
         }
 
         [HttpGet("/addurl")]

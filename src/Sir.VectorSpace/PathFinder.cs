@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Sir.VectorSpace
@@ -214,6 +216,76 @@ namespace Sir.VectorSpace
             }
 
             return count;
+        }
+
+        public static VectorNode DeserializeNode(byte[] nodeBuffer, Stream vectorStream, IModel model)
+        {
+            // Deserialize node
+            var vecOffset = BitConverter.ToInt64(nodeBuffer, 0);
+            var postingsOffset = BitConverter.ToInt64(nodeBuffer, sizeof(long));
+            var vectorCount = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long));
+            var weight = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long));
+            var terminator = BitConverter.ToInt64(nodeBuffer, sizeof(long) + sizeof(long) + sizeof(long) + sizeof(long));
+
+            return DeserializeNode(vecOffset, postingsOffset, vectorCount, weight, terminator, vectorStream, model);
+        }
+
+        public static VectorNode DeserializeNode(
+            long vecOffset,
+            long postingsOffset,
+            long componentCount,
+            long weight,
+            long terminator,
+            Stream vectorStream,
+            IDistanceCalculator model)
+        {
+            var vector = VectorOperations.DeserializeVector(vecOffset, (int)componentCount, model.NumOfDimensions, vectorStream);
+            var node = new VectorNode(postingsOffset, vecOffset, terminator, weight, vector);
+
+            return node;
+        }
+
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, IModel model)
+        {
+            VectorNode root = new VectorNode();
+            VectorNode cursor = root;
+            var tail = new Stack<VectorNode>();
+            var buf = new byte[VectorNode.BlockSize];
+
+            while (true)
+            {
+                var read = indexStream.Read(buf);
+
+                if (read == 0)
+                    break;
+
+                var node = DeserializeNode(buf, vectorStream, model);
+
+                if (node.Terminator == 0) // there is both a left and a right child
+                {
+                    cursor.Left = node;
+                    tail.Push(cursor);
+                }
+                else if (node.Terminator == 1) // there is a left but no right child
+                {
+                    cursor.Left = node;
+                }
+                else if (node.Terminator == 2) // there is a right but no left child
+                {
+                    cursor.Right = node;
+                }
+                else // there are no children
+                {
+                    if (tail.Count > 0)
+                    {
+                        tail.Pop().Right = node;
+                    }
+                }
+
+                cursor = node;
+            }
+
+            return root;
         }
     }
 }

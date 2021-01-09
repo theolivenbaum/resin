@@ -79,7 +79,7 @@ namespace Sir.Search
             Parallel.ForEach(query.AllTerms(), term =>
             //foreach (var term in query.AllTerms())
             {
-                var columnReader = GetColumnReader(term.CollectionId, term.KeyId);
+                var columnReader = GetColumnReader(term.Directory, term.CollectionId, term.KeyId);
 
                 if (columnReader != null)
                 {
@@ -143,15 +143,15 @@ namespace Sir.Search
             return result;
         }
 
-        public IColumnReader GetColumnReader(ulong collectionId, long keyId)
+        private IColumnReader GetColumnReader(string directory, ulong collectionId, long keyId)
         {
-            var ixFileName = Path.Combine(_sessionFactory.Directory, string.Format("{0}.{1}.ix", collectionId, keyId));
+            var ixFileName = Path.Combine(directory, string.Format("{0}.{1}.ix", collectionId, keyId));
 
             if (!File.Exists(ixFileName))
                 return null;
 
-            var vectorFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.vec");
-            var pageIndexFileName = Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.ixtp");
+            var vectorFileName = Path.Combine(directory, $"{collectionId}.{keyId}.vec");
+            var pageIndexFileName = Path.Combine(directory, $"{collectionId}.{keyId}.ixtp");
 
             using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(pageIndexFileName)))
             {

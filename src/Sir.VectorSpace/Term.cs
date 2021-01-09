@@ -8,6 +8,7 @@ namespace Sir.VectorSpace
         public IVector Vector { get; }
         public long KeyId { get; }
         public string Key { get; }
+        public string Directory { get; }
         public ulong CollectionId { get; }
         public IList<long> PostingsOffsets { get; set; }
         public double Score { get; set; }
@@ -15,6 +16,7 @@ namespace Sir.VectorSpace
         public IList<(ulong collectionId, long documentId)> Result { get; set; }
 
         public Term(
+            string directory,
             ulong collectionId,
             long keyId, 
             string key, 
@@ -24,6 +26,7 @@ namespace Sir.VectorSpace
             bool not)
             : base(and, or, not)
         {
+            Directory = directory;
             CollectionId = collectionId;
             KeyId = keyId;
             Key = key;

@@ -17,16 +17,17 @@ namespace Sir.Documents
         private readonly DocIndexWriter _docIx;
         private readonly ulong _collectionId;
         private readonly ISessionFactory _sessionFactory;
+        private readonly string _directory;
         private readonly object _keyLock = new object();
         
-        public DocumentWriter(ulong collectionId, ISessionFactory sessionFactory)
+        public DocumentWriter(string directory, ulong collectionId, ISessionFactory sessionFactory)
         {
-            var valueStream = sessionFactory.CreateAppendStream(collectionId, "val");
-            var keyStream = sessionFactory.CreateAppendStream(collectionId, "key");
-            var docStream = sessionFactory.CreateAppendStream(collectionId, "docs");
-            var valueIndexStream = sessionFactory.CreateAppendStream(collectionId, "vix");
-            var keyIndexStream = sessionFactory.CreateAppendStream(collectionId, "kix");
-            var docIndexStream = sessionFactory.CreateAppendStream(collectionId, "dix");
+            var valueStream = sessionFactory.CreateAppendStream(directory, collectionId, "val");
+            var keyStream = sessionFactory.CreateAppendStream(directory, collectionId, "key");
+            var docStream = sessionFactory.CreateAppendStream(directory, collectionId, "docs");
+            var valueIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "vix");
+            var keyIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "kix");
+            var docIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "dix");
 
             _vals = new ValueWriter(valueStream);
             _keys = new ValueWriter(keyStream);
@@ -36,6 +37,7 @@ namespace Sir.Documents
             _docIx = new DocIndexWriter(docIndexStream);
             _collectionId = collectionId;
             _sessionFactory = sessionFactory;
+            _directory = directory;
         }
 
         public long EnsureKeyExistsSafely(string keyStr)
@@ -43,11 +45,11 @@ namespace Sir.Documents
             var keyHash = keyStr.ToHash();
             long keyId;
 
-            if (!_sessionFactory.TryGetKeyId(_collectionId, keyHash, out keyId))
+            if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
             {
                 lock (_keyLock)
                 {
-                    if (!_sessionFactory.TryGetKeyId(_collectionId, keyHash, out keyId))
+                    if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
                     {
                         // We have a new key!
 
@@ -57,7 +59,7 @@ namespace Sir.Documents
                         keyId = PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
 
                         // store key mapping
-                        _sessionFactory.RegisterKeyMapping(_collectionId, keyHash, keyId);
+                        _sessionFactory.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
                     }
                 }
             }
@@ -70,7 +72,7 @@ namespace Sir.Documents
             var keyHash = keyStr.ToHash();
             long keyId;
 
-            if (!_sessionFactory.TryGetKeyId(_collectionId, keyHash, out keyId))
+            if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
             {
                 // We have a new key!
 
@@ -80,7 +82,7 @@ namespace Sir.Documents
                 keyId = PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
 
                 // store key mapping
-                _sessionFactory.RegisterKeyMapping(_collectionId, keyHash, keyId);
+                _sessionFactory.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
             }
 
             return keyId;

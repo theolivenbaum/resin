@@ -202,19 +202,19 @@ namespace Sir.Search
             return root;
         }
 
-        private IList<Term> ParseTerms(string collectionName, string key, T value, bool and, bool or, bool not)
+        private IList<Term> ParseTerms(string directory, string collectionName, string key, T value, bool and, bool or, bool not)
         {
             var collectionId = collectionName.ToHash();
             long keyId;
             var terms = new List<Term>();
 
-            if (_sessionFactory.TryGetKeyId(collectionId, key.ToHash(), out keyId))
+            if (_sessionFactory.TryGetKeyId(directory, collectionId, key.ToHash(), out keyId))
             {
                 var tokens = _model.Tokenize(value);
 
                 foreach (var term in tokens)
                 {
-                    terms.Add(new Term(collectionId, keyId, key, term, and, or, not));
+                    terms.Add(new Term(directory, collectionId, keyId, key, term, and, or, not));
                 }
             }
 

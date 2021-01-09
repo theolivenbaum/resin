@@ -13,9 +13,11 @@ namespace Sir.VectorSpace
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly IDictionary<(ulong collectionId, long keyId), Stream> _streams;
+        private readonly string _directory;
 
-        public PostingsReader(ISessionFactory sessionFactory)
+        public PostingsReader(string directory, ISessionFactory sessionFactory)
         {
+            _directory = directory;
             _sessionFactory = sessionFactory;
             _streams = new Dictionary<(ulong collectionId, long keyId), Stream>();
         }
@@ -67,7 +69,7 @@ namespace Sir.VectorSpace
 
             if (!_streams.TryGetValue(key, out stream))
             {
-                stream = _sessionFactory.CreateReadStream(Path.Combine(_sessionFactory.Directory, $"{collectionId}.{keyId}.pos"));
+                stream = _sessionFactory.CreateReadStream(Path.Combine(_directory, $"{collectionId}.{keyId}.pos"));
                 _streams.Add(key, stream);
             }
 

@@ -19,24 +19,14 @@ namespace Sir.Search
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
 
-        public string Directory { get; }
+        //public string Directory { get; }
         public ILogger Logger { get; }
 
-        public SessionFactory(string directory = null, ILogger logger = null)
+        public SessionFactory(ILogger logger = null)
         {
-            var time = Stopwatch.StartNew();
-
-            Directory = directory;
-
-            if (Directory != null && !System.IO.Directory.Exists(Directory))
-            {
-                System.IO.Directory.CreateDirectory(Directory);
-            }
-
-            _keys = LoadKeys();
             Logger = logger;
 
-           LogInformation($"sessionfactory initiated in {time.Elapsed}");
+            LogInformation($"sessionfactory initiated");
         }
 
         public void LogInformation(string message)
@@ -51,9 +41,9 @@ namespace Sir.Search
                 Logger.LogDebug(message);
         }
 
-        public long GetDocCount(string collection)
+        public long GetDocCount(string directory, string collection)
         {
-            var fileName = Path.Combine(Directory, $"{collection.ToHash()}.dix");
+            var fileName = Path.Combine(directory, $"{collection.ToHash()}.dix");
 
             if (!File.Exists(fileName))
                 return 0;
@@ -61,14 +51,19 @@ namespace Sir.Search
             return new FileInfo(fileName).Length / (sizeof(long) + sizeof(int));
         }
 
-        public void Truncate(ulong collectionId)
+        public void Truncate(string directory, ulong collectionId)
         {
             var count = 0;
 
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*"))
             {
                 File.Delete(file);
                 count++;
+            }
+
+            if (_keys == null)
+            {
+                RefreshKeys(directory);
             }
 
             _keys.Remove(collectionId, out _);
@@ -76,31 +71,31 @@ namespace Sir.Search
             LogInformation($"truncated collection {collectionId} ({count} files)");
         }
 
-        public void TruncateIndex(ulong collectionId)
+        public void TruncateIndex(string directory, ulong collectionId)
         {
             var count = 0;
 
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ix"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*.ix"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ixp"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*.ixp"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.ixtp"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*.ixtp"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.vec"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*.vec"))
             {
                 File.Delete(file);
                 count++;
             }
-            foreach (var file in System.IO.Directory.GetFiles(Directory, $"{collectionId}*.pos"))
+            foreach (var file in Directory.GetFiles(directory, $"{collectionId}*.pos"))
             {
                 File.Delete(file);
                 count++;
@@ -110,6 +105,7 @@ namespace Sir.Search
         }
 
         public void Optimize<T>(
+            string directory,
             string collection,
             HashSet<string> selectFields, 
             IModel<T> model,
@@ -122,14 +118,14 @@ namespace Sir.Search
             var collectionId = collection.ToHash();
 
             if (truncateIndex)
-                TruncateIndex(collectionId);
+                TruncateIndex(directory, collectionId);
 
             using (var debugger = new IndexDebugger(Logger, reportFrequency))
             using (var documents = new DocumentStreamSession(this))
             {
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
                 {
-                    using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                    using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
                     }
@@ -190,12 +186,13 @@ namespace Sir.Search
         }
 
         public void SaveAs<T>(
+            string targetDirectory,
             ulong targetCollectionId, 
             IEnumerable<Document> documents,
             IModel<T> model,
             int reportSize = 1000)
         {
-            Write(targetCollectionId, documents, model, reportSize);
+            Write(targetDirectory, targetCollectionId, documents, model, reportSize);
         }
 
         public void Write<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
@@ -240,13 +237,13 @@ namespace Sir.Search
             }
         }
 
-        public void Index<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
+        public void Index<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
             using (var indexSession = new IndexSession<T>(model, model))
             {
                 Index(collectionId, job, model, indexSession);
 
-                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -287,43 +284,43 @@ namespace Sir.Search
             LogInformation($"processed indexing job (collection {collectionId}) in {time.Elapsed}");
         }
 
-        public void Write<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
+        public void Write<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
-            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, this)))
+            using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
             using (var indexSession = new IndexSession<T>(model, model))
             {
                 Write(collectionId, job, model, writeSession, indexSession, reportSize);
 
-                using (var stream = new WritableIndexStream(collectionId, this, logger: Logger))
+                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
             }
         }
 
-        public FileStream CreateLockFile(ulong collectionId)
+        public FileStream CreateLockFile(string directory, ulong collectionId)
         {
-            return new FileStream(Path.Combine(Directory, collectionId + ".lock"),
+            return new FileStream(Path.Combine(directory, collectionId + ".lock"),
                    FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None,
                    4096, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
         }
 
-        public void RefreshKeys()
+        public void RefreshKeys(string directory)
         {
-            _keys = LoadKeys();
+            _keys = LoadKeys(directory);
         }
 
-        public ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys()
+        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys(string directory)
         {
             var timer = Stopwatch.StartNew();
             var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
 
-            if (Directory == null)
+            if (directory == null)
             {
                 return allkeys;
             }
 
-            foreach (var keyFile in System.IO.Directory.GetFiles(Directory, "*.kmap"))
+            foreach (var keyFile in Directory.GetFiles(directory, "*.kmap"))
             {
                 var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
                 ConcurrentDictionary<ulong, long> keys;
@@ -354,8 +351,13 @@ namespace Sir.Search
             return allkeys;
         }
 
-        public void RegisterKeyMapping(ulong collectionId, ulong keyHash, long keyId)
+        public void RegisterKeyMapping(string directory, ulong collectionId, ulong keyHash, long keyId)
         {
+            if (_keys == null)
+            {
+                RefreshKeys(directory);
+            }
+
             ConcurrentDictionary<ulong, long> keys;
 
             if (!_keys.TryGetValue(collectionId, out keys))
@@ -368,20 +370,30 @@ namespace Sir.Search
             {
                 keys.GetOrAdd(keyHash, keyId);
 
-                using (var stream = CreateAppendStream(collectionId, "kmap"))
+                using (var stream = CreateAppendStream(directory, collectionId, "kmap"))
                 {
                     stream.Write(BitConverter.GetBytes(keyHash), 0, sizeof(ulong));
                 }
             }
         }
 
-        public long GetKeyId(ulong collectionId, ulong keyHash)
+        public long GetKeyId(string directory, ulong collectionId, ulong keyHash)
         {
+            if (_keys == null)
+            {
+                RefreshKeys(directory);
+            }
+
             return _keys[collectionId][keyHash];
         }
 
-        public bool TryGetKeyId(ulong collectionId, ulong keyHash, out long keyId)
+        public bool TryGetKeyId(string directory, ulong collectionId, ulong keyHash, out long keyId)
         {
+            if (_keys == null)
+            {
+                RefreshKeys(directory);
+            }
+
             var keys = _keys.GetOrAdd(collectionId, new ConcurrentDictionary<ulong, long>());
 
             if (!keys.TryGetValue(keyHash, out keyId))
@@ -418,9 +430,9 @@ namespace Sir.Search
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.Asynchronous);
         }
 
-        public Stream CreateAppendStream(ulong collectionId, string fileExtension)
+        public Stream CreateAppendStream(string directory, ulong collectionId, string fileExtension)
         {
-            var fileName = Path.Combine(Directory, $"{collectionId}.{fileExtension}");
+            var fileName = Path.Combine(directory, $"{collectionId}.{fileExtension}");
 
             if (!File.Exists(fileName))
             {
@@ -432,9 +444,9 @@ namespace Sir.Search
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public Stream CreateAppendStream(ulong collectionId, long keyId, string fileExtension)
+        public Stream CreateAppendStream(string directory, ulong collectionId, long keyId, string fileExtension)
         {
-            var fileName = Path.Combine(Directory, $"{collectionId}.{keyId}.{fileExtension}");
+            var fileName = Path.Combine(directory, $"{collectionId}.{keyId}.{fileExtension}");
 
             if (!File.Exists(fileName))
             {
@@ -446,17 +458,17 @@ namespace Sir.Search
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
         }
 
-        public bool CollectionExists(ulong collectionId)
+        public bool CollectionExists(string directory, ulong collectionId)
         {
-            return File.Exists(Path.Combine(Directory, collectionId + ".vec"));
+            return File.Exists(Path.Combine(directory, collectionId + ".vec"));
         }
 
-        public bool CollectionIsIndexOnly(ulong collectionId)
+        public bool CollectionIsIndexOnly(string directory, ulong collectionId)
         {
-            if (!CollectionExists(collectionId))
+            if (!CollectionExists(directory, collectionId))
                 throw new InvalidOperationException($"{collectionId} dows not exist");
 
-            return !File.Exists(Path.Combine(Directory, collectionId + ".docs"));
+            return !File.Exists(Path.Combine(directory, collectionId + ".docs"));
         }
 
         public void Dispose()
