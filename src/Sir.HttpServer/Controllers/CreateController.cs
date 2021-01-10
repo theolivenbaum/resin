@@ -52,7 +52,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             var model = new BagOfCharsModel();
-            var collectionId = "query".ToHash();
+            var collectionId = "url".ToHash();
 
             SessionFactory.Write(
                 userDirectory,

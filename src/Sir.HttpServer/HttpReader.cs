@@ -47,14 +47,30 @@ namespace Sir.HttpServer
                 skip = int.Parse(request.Query["skip"]);
 
             var queryId = request.Query["queryId"].ToString();
-            var userDirectory = Path.Combine(_config.Get("user_dir"), queryId);
-            var queryCollectionId = "query".ToHash();
-            var keyId = _sessionFactory.GetKeyId(userDirectory, queryCollectionId, "url".ToHash());
 
-            using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{queryCollectionId}.{keyId}.ix")))
-            using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{queryCollectionId}.{keyId}.vec")))
+            var userDirectory = Path.Combine(_config.Get("user_dir"), queryId);
+            var userUrlCollection = "url".ToHash();
+            long pageKeyId;
+            long siteKeyId;
+            VectorNode pageIndex = null;
+            VectorNode siteIndex = null;
+
+            if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "page".ToHash(), out pageKeyId))
             {
-                var urlTree = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+                using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ix")))
+                using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.vec")))
+                {
+                    pageIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+                }
+            }
+
+            if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "site".ToHash(), out siteKeyId))
+            {
+                using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ix")))
+                using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.vec")))
+                {
+                    siteIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+                }
             }
 
             var query = await _httpQueryParser.ParseRequest(request);
