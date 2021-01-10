@@ -13,11 +13,12 @@ namespace Sir.HttpServer.Controllers
         private readonly IModel<string> _model;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger<SaveAsController> _log;
+        private readonly IConfigurationProvider _config;
         private static readonly HashSet<string> _reservedCollections = new HashSet<string> { "cc_wat", "cc_wet" };
 
         public SaveAsController(
             IConfigurationProvider config,
-            SessionFactory sessionFactory,
+            StreamFactory sessionFactory,
             IModel<string> model,
             QueryParser<string> queryParser,
             SaveAsJobQueue queue,
@@ -26,6 +27,7 @@ namespace Sir.HttpServer.Controllers
             _model = model;
             _queryParser = queryParser;
             _log = log;
+            _config = config;
         }
 
         [HttpGet]
@@ -73,6 +75,7 @@ namespace Sir.HttpServer.Controllers
 
             new SaveAsJob<string>
                 (
+                    _config.Get("data_dir"),
                     sessionFactory: SessionFactory,
                     queryParser: _queryParser,
                     model: _model,

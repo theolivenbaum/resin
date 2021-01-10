@@ -15,7 +15,7 @@ namespace Sir.HttpServer.Controllers
             IHttpReader reader, 
             IConfigurationProvider config,
             IModel<string> model,
-            SessionFactory sessionFactory) : base(config, sessionFactory)
+            StreamFactory sessionFactory) : base(config, sessionFactory)
         {
             _reader = reader;
             _model = model;

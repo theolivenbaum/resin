@@ -13,18 +13,19 @@ namespace Sir.Search
     /// </summary>
     public class SearchSession : DocumentStreamSession, IDisposable, ISearchSession
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private readonly IModel _model;
         private readonly ILogger _logger;
 
         public SearchSession(
-            SessionFactory sessionFactory,
+            string directory, 
+            StreamFactory sessionFactory,
             IModel model,
-            ILogger logger = null) : base(sessionFactory)
+            ILogger logger = null) : base(directory, sessionFactory)
         {
             _sessionFactory = sessionFactory;
             _model = model;
-            _logger = logger ?? sessionFactory.Logger;
+            _logger = logger;
         }
 
         public SearchResult Search(Query query, int skip, int take)

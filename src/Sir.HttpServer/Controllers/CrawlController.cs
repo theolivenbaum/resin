@@ -14,10 +14,11 @@ namespace Sir.HttpServer.Controllers
         private readonly IModel<string> _model;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger<CrawlController> _log;
+        private readonly IConfigurationProvider _config;
 
         public CrawlController(
             IConfigurationProvider config,
-            SessionFactory sessionFactory,
+            StreamFactory sessionFactory,
             IModel<string> model,
             QueryParser<string> queryParser,
             JobQueue queue,
@@ -27,6 +28,7 @@ namespace Sir.HttpServer.Controllers
             _model = model;
             _queryParser = queryParser;
             _log = log;
+            _config = config;
         }
 
         [HttpGet]
@@ -70,6 +72,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             _queue.Enqueue(new CrawlJob(
+                _config.Get("data_dir"),
                 SessionFactory,
                 _queryParser,
                 _model,

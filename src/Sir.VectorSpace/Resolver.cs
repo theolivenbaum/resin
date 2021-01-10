@@ -7,11 +7,11 @@ namespace Sir.VectorSpace
         /// <summary>
         /// Resolve posting list locations into document IDs.
         /// </summary>
-        public static void Resolve(Query query, ISessionFactory sessionFactory)
+        public static void Resolve(Query query, IStreamFactory sessionFactory)
         {
             Parallel.ForEach(query.AllTerms(), term =>
             {
-                Resolve(term, new PostingsReader(sessionFactory));
+                Resolve(term, new PostingsReader(term.Directory, sessionFactory));
             });
         }
 

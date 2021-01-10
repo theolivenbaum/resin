@@ -9,7 +9,7 @@ namespace Sir.HttpServer.Controllers
 {
     public class CreateController : UIController
     {
-        public CreateController(IConfigurationProvider config, SessionFactory sessionFactory) : base(config, sessionFactory)
+        public CreateController(IConfigurationProvider config, StreamFactory sessionFactory) : base(config, sessionFactory)
         {
         }
 
@@ -52,7 +52,7 @@ namespace Sir.HttpServer.Controllers
             }
 
             var model = new BagOfCharsModel();
-            var tree = new VectorNode();
+            //var tree = new VectorNode();
             var collectionId = "query".ToHash();
 
             SessionFactory.Write(
@@ -61,13 +61,13 @@ namespace Sir.HttpServer.Controllers
                 urls.Select(url => new Document(new Field[] { new Field("url", url, index: true, store: true) })),
                 model);
 
-            for (int i = 0;i < urls.Length;i++)
-            {
-                foreach (var vector in model.Tokenize(urls[i]))
-                {
-                    tree.MergeOrAddConcurrent(new VectorNode(vector: vector, docId: i), model);
-                }
-            }
+            //for (int i = 0;i < urls.Length;i++)
+            //{
+            //    foreach (var vector in model.Tokenize(urls[i]))
+            //    {
+            //        tree.MergeOrAddConcurrent(new VectorNode(vector: vector, docId: i), model);
+            //    }
+            //}
 
             return RedirectToAction("Index", "Search", new { queryId, field = new string[] { "title", "text" } });
         }

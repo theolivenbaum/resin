@@ -15,17 +15,17 @@ namespace Sir.HttpServer.Features
 {
     public class CrawlJob : AsyncJob
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly string _directory;
+        private readonly StreamFactory _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IModel<string> _model;
-        private readonly HashSet<string> _wetStoredFieldNames;
-        private readonly HashSet<string> _wetIndexedFieldNames;
         private readonly int _skip;
         private readonly int _take;
 
         public CrawlJob(
-            SessionFactory sessionFactory,
+            string directory,
+            StreamFactory sessionFactory,
             QueryParser<string> queryParser,
             IModel<string> model,
             ILogger logger,
@@ -40,12 +40,11 @@ namespace Sir.HttpServer.Features
             int take) 
             : base(id, collection, field, q, job, and, or)
         {
+            _directory = directory;
             _sessionFactory = sessionFactory;
             _queryParser = queryParser;
             _logger = logger;
             _model = model;
-            _wetStoredFieldNames = new HashSet<string> { "url", "title", "description", "filename" };
-            _wetIndexedFieldNames = new HashSet<string> { "title", "description" };
             _skip = skip;
             _take = take;
 
@@ -80,7 +79,7 @@ namespace Sir.HttpServer.Features
                 and: And, 
                 or: Or);
 
-            using (var readSession = _sessionFactory.CreateSearchSession(_model))
+            using (var readSession = new SearchSession(_directory, _sessionFactory, _model, _logger))
             {
                 var originalResult = readSession.Search(originalQuery, _skip, _take)
                     .Documents
@@ -117,8 +116,8 @@ namespace Sir.HttpServer.Features
 
                     if (wetResult == null || wetResult.Total == 0)
                     {
-                        var localFileName = Path.Combine(_sessionFactory.Directory, "wet", fileName);
-                        var tmpFileName = Path.Combine(_sessionFactory.Directory, "tmp", Id, fileName);
+                        var localFileName = Path.Combine(_directory, "wet", fileName);
+                        var tmpFileName = Path.Combine(_directory, "tmp", Id, fileName);
 
                         if (!File.Exists(localFileName))
                         {
@@ -204,7 +203,7 @@ namespace Sir.HttpServer.Features
                 {
                     var time = Stopwatch.StartNew();
 
-                    _sessionFactory.Write(wetCollectionId, writePayload, _model, reportSize: 1000);
+                    _sessionFactory.Write(_directory, wetCollectionId, writePayload, _model, reportSize: 1000);
 
                     Status["index"] = 100;
 

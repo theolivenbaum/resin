@@ -13,11 +13,13 @@ namespace Sir.HttpServer
     /// </summary>
     public class HttpWriter : IHttpWriter
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
+        private readonly IConfigurationProvider _config;
 
-        public HttpWriter(SessionFactory sessionFactory)
+        public HttpWriter(StreamFactory sessionFactory, IConfigurationProvider config)
         {
             _sessionFactory = sessionFactory;
+            _config = config;
         }
 
         public void Write(HttpRequest request, IModel<string> model)
@@ -26,6 +28,7 @@ namespace Sir.HttpServer
             var collectionId = request.Query["collection"].First().ToHash();
 
             _sessionFactory.Write(
+                _config.Get("data_dir"),
                 collectionId,
                 documents,
                 model);

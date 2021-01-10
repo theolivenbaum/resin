@@ -2,7 +2,7 @@
 
 namespace Sir
 {
-    public interface ISessionFactory
+    public interface IStreamFactory
     {
         //string Directory { get; }
         Stream CreateAppendStream(string directory, ulong collectionId, string fileExtension);

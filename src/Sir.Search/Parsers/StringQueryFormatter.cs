@@ -9,18 +9,20 @@ namespace Sir.Search
 {
     public class StringQueryFormatter : IQueryFormatter<string>
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private readonly ILogger _log;
+        private readonly string _directory;
 
-        public StringQueryFormatter(SessionFactory sessionFactory, ILogger log)
+        public StringQueryFormatter(string directory, StreamFactory sessionFactory, ILogger log)
         {
             _sessionFactory = sessionFactory;
             _log = log;
+            _directory = directory;
         }
 
         public async Task<string> Format(HttpRequest request, IModel<string> tokenizer)
         {
-            var parser = new HttpQueryParser(new QueryParser<string>(_sessionFactory, tokenizer, _log));
+            var parser = new HttpQueryParser(new QueryParser<string>(_directory, _sessionFactory, tokenizer, _log));
             var query = await parser.ParseRequest(request);
             var dictionary = new Dictionary<string, object>();
             

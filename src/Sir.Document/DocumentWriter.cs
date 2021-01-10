@@ -16,11 +16,11 @@ namespace Sir.Documents
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
         private readonly ulong _collectionId;
-        private readonly ISessionFactory _sessionFactory;
+        private readonly IStreamFactory _sessionFactory;
         private readonly string _directory;
         private readonly object _keyLock = new object();
         
-        public DocumentWriter(string directory, ulong collectionId, ISessionFactory sessionFactory)
+        public DocumentWriter(string directory, ulong collectionId, IStreamFactory sessionFactory)
         {
             var valueStream = sessionFactory.CreateAppendStream(directory, collectionId, "val");
             var keyStream = sessionFactory.CreateAppendStream(directory, collectionId, "key");

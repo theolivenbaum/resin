@@ -13,32 +13,30 @@ using System.Threading.Tasks;
 namespace Sir.Search
 {
     /// <summary>
-    /// Dispatcher of sessions.
+    /// Multi-directory stream dispatcher with helper methods for writing, indexing, optimizing and truncating collection.
     /// </summary>
-    public class SessionFactory : IDisposable, ISessionFactory
+    public class StreamFactory : IDisposable, IStreamFactory
     {
         private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
+        private ILogger _logger;
 
-        //public string Directory { get; }
-        public ILogger Logger { get; }
-
-        public SessionFactory(ILogger logger = null)
+        public StreamFactory(ILogger logger = null)
         {
-            Logger = logger;
+            _logger = logger;
 
             LogInformation($"sessionfactory initiated");
         }
 
         public void LogInformation(string message)
         {
-            if (Logger != null)
-                Logger.LogInformation(message);
+            if (_logger != null)
+                _logger.LogInformation(message);
         }
 
         public void LogDebug(string message)
         {
-            if (Logger != null)
-                Logger.LogDebug(message);
+            if (_logger != null)
+                _logger.LogDebug(message);
         }
 
         public long GetDocCount(string directory, string collection)
@@ -120,12 +118,12 @@ namespace Sir.Search
             if (truncateIndex)
                 TruncateIndex(directory, collectionId);
 
-            using (var debugger = new IndexDebugger(Logger, reportFrequency))
-            using (var documents = new DocumentStreamSession(this))
+            using (var debugger = new IndexDebugger(_logger, reportFrequency))
+            using (var documents = new DocumentStreamSession(directory, this))
             {
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
                 {
-                    using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
+                    using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
                     {
                         stream.Write(indexSession.GetInMemoryIndex());
                     }
@@ -195,12 +193,12 @@ namespace Sir.Search
             Write(targetDirectory, targetCollectionId, documents, model, reportSize);
         }
 
-        public void Write<T>(ulong collectionId, IEnumerable<Document> job, IModel<T> model, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
+        public void Write<T>(ulong collectionId, IEnumerable<Document> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
         {
             LogInformation($"writing to collection {collectionId}");
 
             var time = Stopwatch.StartNew();
-            var debugger = new IndexDebugger(Logger, reportSize);
+            var debugger = new IndexDebugger(_logger, reportSize);
 
             foreach (var document in job)
             {
@@ -218,7 +216,7 @@ namespace Sir.Search
                 debugger.Step(indexSession);
             }
 
-            Logger.LogInformation($"processed write&index job (collection {collectionId}) in {time.Elapsed}");
+            _logger.LogInformation($"processed write&index job (collection {collectionId}) in {time.Elapsed}");
         }
 
         public void Write<T>(
@@ -243,7 +241,7 @@ namespace Sir.Search
             {
                 Index(collectionId, job, model, indexSession);
 
-                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
+                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -289,9 +287,9 @@ namespace Sir.Search
             using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
             using (var indexSession = new IndexSession<T>(model, model))
             {
-                Write(collectionId, job, model, writeSession, indexSession, reportSize);
+                Write(collectionId, job, writeSession, indexSession, reportSize);
 
-                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: Logger))
+                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }
@@ -405,14 +403,6 @@ namespace Sir.Search
             return true;
         }
 
-        public ISearchSession CreateSearchSession(IModel model)
-        {
-            return new SearchSession(
-                this,
-                model,
-                Logger);
-        }
-
         public Stream CreateAsyncReadStream(string fileName)
         {
             return new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, FileOptions.Asynchronous);
@@ -473,6 +463,7 @@ namespace Sir.Search
 
         public void Dispose()
         {
+            LogInformation($"sessionfactory disposed");
         }
     }
 }

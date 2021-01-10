@@ -9,10 +9,11 @@ namespace Sir.HttpServer.Features
 {
     public class SaveAsJob<T> : BaseJob
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IModel<T> _model;
+        private readonly string _directory;
         private readonly HashSet<string> _indexFieldNames;
         private readonly string _target;
         private readonly int _skip;
@@ -21,7 +22,8 @@ namespace Sir.HttpServer.Features
         private readonly bool _truncate;
 
         public SaveAsJob(
-            SessionFactory sessionFactory,
+            string directory,
+            StreamFactory sessionFactory,
             QueryParser<string> queryParser,
             IModel<T> model,
             ILogger logger,
@@ -37,6 +39,7 @@ namespace Sir.HttpServer.Features
             bool truncate) 
             : base(collections, fields, q, and, or)
         {
+            _directory = directory;
             _indexFieldNames = new HashSet<string>(select);
             _sessionFactory = sessionFactory;
             _queryParser = queryParser;
@@ -64,17 +67,17 @@ namespace Sir.HttpServer.Features
                 var targetCollectionId = _target.ToHash();
                 IEnumerable<Document> documents;
 
-                using (var readSession = _sessionFactory.CreateSearchSession(_model))
+                using (var readSession = new SearchSession(_directory, _sessionFactory, _model, _logger))
                 {
                     documents = readSession.Search(query, _skip, _take).Documents;
                 }
 
                 if (_truncate)
                 {
-                    _sessionFactory.Truncate(targetCollectionId);
+                    _sessionFactory.Truncate(_directory, targetCollectionId);
                 }
                 
-                using (var documentWriter = new DocumentWriter(targetCollectionId, _sessionFactory))
+                using (var documentWriter = new DocumentWriter(_directory, targetCollectionId, _sessionFactory))
                 {
                     foreach (var field in _indexFieldNames)
                     {
@@ -83,9 +86,10 @@ namespace Sir.HttpServer.Features
                 }
 
                 _sessionFactory.SaveAs(
-                        targetCollectionId,
-                        documents,
-                        _model);
+                    _directory,
+                    targetCollectionId,
+                    documents,
+                    _model);
             }
             catch (Exception ex)
             {

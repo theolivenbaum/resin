@@ -17,17 +17,20 @@ namespace Sir.HttpServer
         public string ContentType => "application/json";
 
         private readonly ILogger<HttpReader> _logger;
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
+        private readonly IConfigurationProvider _config;
 
         public HttpReader(
-            SessionFactory sessionFactory, 
+            StreamFactory sessionFactory, 
             HttpQueryParser httpQueryParser,
+            IConfigurationProvider config,
             ILogger<HttpReader> logger)
         {
             _logger = logger;
             _sessionFactory = sessionFactory;
             _httpQueryParser = httpQueryParser;
+            _config = config;
         }
 
         public void Dispose()
@@ -63,7 +66,7 @@ namespace Sir.HttpServer
             _logger.LogDebug($"incoming query: {queryLog}");
 #endif
 
-            using (var readSession = _sessionFactory.CreateSearchSession(model))
+            using (var readSession = new SearchSession(_config.Get("data_dir"), _sessionFactory, model, _logger))
             {
                 return readSession.Search(query, skip, take);
             }

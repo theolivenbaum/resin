@@ -7,11 +7,13 @@ namespace Sir.Search
 {
     public class DocumentStreamSession : IDisposable
     {
-        protected readonly SessionFactory SessionFactory;
+        private readonly string _directory;
+        protected readonly StreamFactory SessionFactory;
         private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
-        public DocumentStreamSession(SessionFactory sessionFactory) 
+        public DocumentStreamSession(string directory, StreamFactory sessionFactory) 
         {
+            _directory = directory;
             SessionFactory = sessionFactory;
             _streamReaders = new Dictionary<ulong, DocumentReader>();
         }
@@ -172,7 +174,7 @@ namespace Sir.Search
 
             if (!_streamReaders.TryGetValue(collectionId, out reader))
             {
-                reader = new DocumentReader(collectionId, SessionFactory);
+                reader = new DocumentReader(_directory, collectionId, SessionFactory);
                 _streamReaders.Add(collectionId, reader);
             }
 

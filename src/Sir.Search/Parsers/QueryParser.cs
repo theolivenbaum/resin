@@ -7,15 +7,17 @@ namespace Sir.Search
 {
     public class QueryParser<T>
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private readonly IModel<T> _model;
         private readonly ILogger _log;
+        private readonly string _directory;
 
-        public QueryParser(SessionFactory sessionFactory, IModel<T> model, ILogger log = null)
+        public QueryParser(string directory, StreamFactory sessionFactory, IModel<T> model, ILogger log = null)
         {
             _sessionFactory = sessionFactory;
             _model = model;
-            _log = log ?? sessionFactory.Logger;
+            _log = log;
+            _directory = directory;
         }
 
         public Query Parse(
@@ -202,19 +204,19 @@ namespace Sir.Search
             return root;
         }
 
-        private IList<Term> ParseTerms(string directory, string collectionName, string key, T value, bool and, bool or, bool not)
+        private IList<Term> ParseTerms(string collectionName, string key, T value, bool and, bool or, bool not)
         {
             var collectionId = collectionName.ToHash();
             long keyId;
             var terms = new List<Term>();
 
-            if (_sessionFactory.TryGetKeyId(directory, collectionId, key.ToHash(), out keyId))
+            if (_sessionFactory.TryGetKeyId(_directory, collectionId, key.ToHash(), out keyId))
             {
                 var tokens = _model.Tokenize(value);
 
                 foreach (var term in tokens)
                 {
-                    terms.Add(new Term(directory, collectionId, keyId, key, term, and, or, not));
+                    terms.Add(new Term(_directory, collectionId, keyId, key, term, and, or, not));
                 }
             }
 

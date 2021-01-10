@@ -8,13 +8,13 @@ namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
-        private readonly SessionFactory _sessionFactory;
+        private readonly StreamFactory _sessionFactory;
         private IConfigurationProvider config;
 
         protected IConfigurationProvider Config { get; }
-        protected SessionFactory SessionFactory => _sessionFactory;
+        protected StreamFactory SessionFactory => _sessionFactory;
 
-        public UIController(IConfigurationProvider config, SessionFactory sessionFactory)
+        public UIController(IConfigurationProvider config, StreamFactory sessionFactory)
         {
             Config = config;
             _sessionFactory = sessionFactory;
