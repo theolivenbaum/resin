@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Resin.Search" Version="0.4.0.7" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -15,6 +14,10 @@
 
   <ItemGroup>
     <Compile Include="..\AssemblyInfo.cs" Link="AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sir.Search\Sir.Search.csproj" />
   </ItemGroup>
 
 </Project>

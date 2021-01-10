@@ -11,7 +11,8 @@ namespace Sir.Tests
 {
     public class IndexSessionTests
     {
-        private SessionFactory _sessionFactory;
+        private StreamFactory _sessionFactory;
+        private string _directory = @"c:\temp\sir_tests";
 
         private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
 
@@ -65,10 +66,10 @@ namespace Sir.Tests
             var collectionId = collection.ToHash();
             const string fieldName = "description";
 
-            _sessionFactory.Truncate(collectionId);
+            _sessionFactory.Truncate(_directory, collectionId);
 
-            using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
-            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, _sessionFactory)))
+            using (var stream = new WritableIndexStream(_directory, collectionId, _sessionFactory))
+            using (var writeSession = new WriteSession(new DocumentWriter(_directory, collectionId, _sessionFactory)))
             {
                 var keyId = writeSession.EnsureKeyExists(fieldName);
 
@@ -87,9 +88,9 @@ namespace Sir.Tests
                 }
             }
 
-            var queryParser = new QueryParser<string>(_sessionFactory, model);
+            var queryParser = new QueryParser<string>(_directory, _sessionFactory, model);
 
-            using (var searchSession = new SearchSession(_sessionFactory, model, new PostingsReader(_sessionFactory)))
+            using (var searchSession = new SearchSession(_directory, _sessionFactory, model))
             {
                 Assert.DoesNotThrow(() =>
                 {
@@ -124,9 +125,9 @@ namespace Sir.Tests
             var collectionId = collection.ToHash();
             const string fieldName = "description";
 
-            _sessionFactory.Truncate(collectionId);
+            _sessionFactory.Truncate(_directory, collectionId);
 
-            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, _sessionFactory)))
+            using (var writeSession = new WriteSession(new DocumentWriter(_directory, collectionId, _sessionFactory)))
             using (var indexSession = new IndexSession<string>(model, model))
             {
                 var keyId = writeSession.EnsureKeyExists(fieldName);
@@ -144,7 +145,7 @@ namespace Sir.Tests
 
                 index = indices[keyId];
 
-                using (var stream = new WritableIndexStream(collectionId, _sessionFactory))
+                using (var stream = new WritableIndexStream(_directory, collectionId, _sessionFactory))
                 {
                     stream.Write(indices);
                 }
@@ -152,9 +153,9 @@ namespace Sir.Tests
 
             Debug.WriteLine(PathFinder.Visualize(index));
 
-            var queryParser = new QueryParser<string>(_sessionFactory, model);
+            var queryParser = new QueryParser<string>(_directory, _sessionFactory, model);
 
-            using (var searchSession = new SearchSession(_sessionFactory, model, new PostingsReader(_sessionFactory)))
+            using (var searchSession = new SearchSession(_directory, _sessionFactory, model))
             {
                 Assert.DoesNotThrow(() =>
                 {
@@ -191,7 +192,7 @@ namespace Sir.Tests
                     .AddDebug();
             });
 
-            _sessionFactory = new SessionFactory(directory: @"c:\temp\sir_tests", logger: loggerFactory.CreateLogger<SessionFactory>());
+            _sessionFactory = new StreamFactory(loggerFactory.CreateLogger<StreamFactory>());
         }
 
         [TearDown]

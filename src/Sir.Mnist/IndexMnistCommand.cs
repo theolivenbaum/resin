@@ -5,8 +5,6 @@ using Sir.VectorSpace;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Sir.Mnist
 {
@@ -30,11 +28,11 @@ namespace Sir.Mnist
             VectorNode tree;
             var debugger = new IndexDebugger(logger);
             var model = new LinearClassifierImageModel();
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
+            using (var sessionFactory = new StreamFactory(logger))
             {
-                sessionFactory.Truncate(collectionId);
+                sessionFactory.Truncate(dataDirectory, collectionId);
 
-                using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
+                using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, sessionFactory)))
                 using (var indexSession = new IndexSession<IImage>(model, model))
                 {
                     var imageIndexId = writeSession.EnsureKeyExists("image");
@@ -55,7 +53,7 @@ namespace Sir.Mnist
 
                     tree = indices[imageIndexId];
 
-                    using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
+                    using (var stream = new WritableIndexStream(dataDirectory, collectionId, sessionFactory, logger: logger))
                     {
                         stream.Write(indices);
                     }

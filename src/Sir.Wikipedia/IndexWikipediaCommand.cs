@@ -36,15 +36,15 @@ namespace Sir.Wikipedia
             var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
+            using (var sessionFactory = new StreamFactory(logger))
             {
                 var debugger = new IndexDebugger(logger, sampleSize);
 
-                using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
+                using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, sessionFactory)))
                 {
                     foreach (var page in payload.Batch(pageSize))
                     {
-                        using (var indexStream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
+                        using (var indexStream = new WritableIndexStream(dataDirectory, collectionId, sessionFactory, logger: logger))
                         using (var indexSession = new IndexSession<string>(model, model))
                         {
                             foreach (var document in page)

@@ -60,6 +60,10 @@ namespace Sir.Cmd
             {
                 Optimize(flags, model, logger);
             }
+            else if (command == "rename")
+            {
+                Rename(flags["dataDirectory"], flags["collection"], flags["newCollection"], logger);
+            }
             else
             {
                 logger.LogInformation("unknown command: {0}", command);
@@ -107,9 +111,10 @@ namespace Sir.Cmd
             var fields = new HashSet<string>(args["fields"].Split(','));
             var truncate = args.ContainsKey("no-truncate") ? false : true;
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
+            using (var sessionFactory = new StreamFactory(logger))
             {
                 sessionFactory.Optimize(
+                    dataDirectory,
                     collection, 
                     fields,
                     model,
@@ -147,9 +152,9 @@ namespace Sir.Cmd
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, log))
+            using (var sessionFactory = new StreamFactory(log))
             {
-                sessionFactory.Truncate(collectionId);
+                sessionFactory.Truncate(dataDirectory, collectionId);
             }
         }
 
@@ -160,9 +165,17 @@ namespace Sir.Cmd
         {
             var collectionId = collection.ToHash();
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, log))
+            using (var sessionFactory = new StreamFactory(log))
             {
-                sessionFactory.TruncateIndex(collectionId);
+                sessionFactory.TruncateIndex(dataDirectory, collectionId);
+            }
+        }
+
+        private static void Rename(string dataDirectory, string currentCollectionName, string newCollectionName, ILogger log)
+        {
+            using (var sessionFactory = new StreamFactory(log))
+            {
+                sessionFactory.Rename(dataDirectory, currentCollectionName.ToHash(), newCollectionName.ToHash());
             }
         }
 
@@ -189,9 +202,9 @@ namespace Sir.Cmd
             var collectionId = collection.ToHash();
             var model = new BagOfCharsModel();
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
-            using (var documents = new DocumentStreamSession(sessionFactory))
-            using (var documentReader = new DocumentReader(collectionId, sessionFactory))
+            using (var sessionFactory = new StreamFactory(logger))
+            using (var documents = new DocumentStreamSession(dataDirectory, sessionFactory))
+            using (var documentReader = new DocumentReader(dataDirectory, collectionId, sessionFactory))
             {
                 var doc = documents.ReadDocument((collectionId, documentId), select, documentReader);
 

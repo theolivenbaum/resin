@@ -24,10 +24,10 @@ namespace Sir.Mnist
             var errors = 0;
             var model = new LinearClassifierImageModel();
 
-            using (var sessionFactory = new SessionFactory(directory: dataDirectory, logger: logger))
-            using (var querySession = sessionFactory.CreateSearchSession(model))
+            using (var sessionFactory = new StreamFactory(logger: logger))
+            using (var querySession = new SearchSession(dataDirectory, sessionFactory, model, logger))
             {
-                var queryParser = new QueryParser<IImage>(sessionFactory, model, logger);
+                var queryParser = new QueryParser<IImage>(dataDirectory, sessionFactory, model, logger);
 
                 foreach (var image in images)
                 {

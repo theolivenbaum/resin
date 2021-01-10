@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -33,10 +34,6 @@ namespace Sir.HttpServer
             _config = config;
         }
 
-        public void Dispose()
-        {
-        }
-
         public async Task<SearchResult> Read(HttpRequest request, IModel<string> model)
         {
             var timer = Stopwatch.StartNew();
@@ -48,6 +45,17 @@ namespace Sir.HttpServer
 
             if (request.Query.ContainsKey("skip"))
                 skip = int.Parse(request.Query["skip"]);
+
+            var queryId = request.Query["queryId"].ToString();
+            var userDirectory = Path.Combine(_config.Get("user_dir"), queryId);
+            var queryCollectionId = "query".ToHash();
+            var keyId = _sessionFactory.GetKeyId(userDirectory, queryCollectionId, "url".ToHash());
+
+            using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{queryCollectionId}.{keyId}.ix")))
+            using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{queryCollectionId}.{keyId}.vec")))
+            {
+                var urlTree = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+            }
 
             var query = await _httpQueryParser.ParseRequest(request);
 
@@ -70,6 +78,10 @@ namespace Sir.HttpServer
             {
                 return readSession.Search(query, skip, take);
             }
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

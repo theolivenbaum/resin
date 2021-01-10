@@ -14,8 +14,9 @@ namespace Sir.Tests
     {
         private ILoggerFactory _loggerFactory;
         private ILogger<ImageModelTests> _logger;
-        private SessionFactory _sessionFactory;
+        private StreamFactory _sessionFactory;
         private IImage[] _data;
+        private string _directory = @"c:\temp\sir_tests";
 
         [Test]
         public void Can_train_in_memory()
@@ -76,7 +77,7 @@ namespace Sir.Tests
 
             _logger = _loggerFactory.CreateLogger<ImageModelTests>();
 
-            _sessionFactory = new SessionFactory(logger: _loggerFactory.CreateLogger<SessionFactory>());
+            _sessionFactory = new StreamFactory(logger: _loggerFactory.CreateLogger<StreamFactory>());
 
             _data = new MnistReader(
                 @"C:\temp\mnist\t10k-images.idx3-ubyte",

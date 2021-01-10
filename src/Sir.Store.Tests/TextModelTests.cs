@@ -12,7 +12,8 @@ namespace Sir.Tests
     public class TextModelTests
     {
         private ILoggerFactory _loggerFactory;
-        private SessionFactory _sessionFactory;
+        private StreamFactory _sessionFactory;
+        private string _directory = @"c:\temp\sir_tests";
 
         private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
 
@@ -67,7 +68,8 @@ namespace Sir.Tests
 
                 Assert.DoesNotThrow(() =>
                 {
-                    using (var reader = new ColumnReader(new PageIndexReader(pageStream), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnReader>()))
+                    using (var pageIndexReader = new PageIndexReader(pageStream))
+                    using (var reader = new ColumnReader(pageIndexReader.ReadAll(), indexStream, vectorStream, _sessionFactory, _loggerFactory.CreateLogger<ColumnReader>()))
                     {
                         foreach (var word in _data)
                         {
@@ -121,7 +123,7 @@ namespace Sir.Tests
                     .AddDebug();
             });
 
-            _sessionFactory = new SessionFactory(logger: _loggerFactory.CreateLogger<SessionFactory>());
+            _sessionFactory = new StreamFactory(logger: _loggerFactory.CreateLogger<StreamFactory>());
         }
 
         [TearDown]

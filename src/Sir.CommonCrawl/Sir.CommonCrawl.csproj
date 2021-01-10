@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Resin.Search" Version="0.4.0.7" />
+    <ProjectReference Include="..\Sir.Search\Sir.Search.csproj" />
   </ItemGroup>
 
 </Project>

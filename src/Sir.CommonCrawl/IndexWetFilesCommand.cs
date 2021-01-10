@@ -19,11 +19,12 @@ namespace Sir.CommonCrawl
             var storeFields = new HashSet<string> { "url" };
             var indexFields = new HashSet<string> { "description" };
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
+            using (var sessionFactory = new StreamFactory(logger))
             {
-                sessionFactory.Truncate(collectionId);
+                sessionFactory.Truncate(dataDirectory, collectionId);
 
                 sessionFactory.Write(
+                    dataDirectory,
                     collectionId,
                     ReadWetFile(fileName)
                                 .Select(dic =>

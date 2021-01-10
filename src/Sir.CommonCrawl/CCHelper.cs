@@ -35,8 +35,8 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var sessionFactory = new SessionFactory(dataDirectory, logger))
-            using (var writeSession = new WriteSession(new DocumentWriter(collectionId, sessionFactory)))
+            using (var sessionFactory = new StreamFactory(logger))
+            using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, sessionFactory)))
             using (var indexSession = new IndexSession<string>(model, model))
             {
                 using (var queue = new ProducerConsumerQueue<Document>(document =>
@@ -56,7 +56,7 @@ namespace Sir.CommonCrawl
                     }
                 }
 
-                using (var stream = new WritableIndexStream(collectionId, sessionFactory, logger: logger))
+                using (var stream = new WritableIndexStream(dataDirectory, collectionId, sessionFactory, logger: logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }

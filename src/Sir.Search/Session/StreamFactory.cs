@@ -66,7 +66,7 @@ namespace Sir.Search
 
             _keys.Remove(collectionId, out _);
 
-            LogInformation($"truncated collection {collectionId} ({count} files)");
+            LogInformation($"truncated collection {collectionId} ({count} files affected)");
         }
 
         public void TruncateIndex(string directory, ulong collectionId)
@@ -99,7 +99,30 @@ namespace Sir.Search
                 count++;
             }
 
-            LogInformation($"truncated index {collectionId} ({count} files)");
+            LogInformation($"truncated index {collectionId} ({count} files affected)");
+        }
+
+        public void Rename(string directory, ulong currentCollectionId, ulong newCollectionId)
+        {
+            var count = 0;
+
+            var from = currentCollectionId.ToString();
+            var to = newCollectionId.ToString();
+
+            foreach (var file in Directory.GetFiles(directory, $"{currentCollectionId}*"))
+            {
+                File.Move(file, file.Replace(from, to));
+                count++;
+            }
+
+            if (_keys == null)
+            {
+                RefreshKeys(directory);
+            }
+
+            _keys.Remove(currentCollectionId, out _);
+
+            LogInformation($"renamed collection {currentCollectionId} to {newCollectionId} ({count} files affected)");
         }
 
         public void Optimize<T>(
