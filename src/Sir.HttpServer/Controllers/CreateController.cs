@@ -52,22 +52,18 @@ namespace Sir.HttpServer.Controllers
             }
 
             var model = new BagOfCharsModel();
-            //var tree = new VectorNode();
             var collectionId = "query".ToHash();
 
             SessionFactory.Write(
                 userDirectory,
                 collectionId,
-                urls.Select(url => new Document(new Field[] { new Field("url", url, index: true, store: true) })),
+                urls.Select(url => new Document(new Field[] { 
+                    new Field(
+                        url.StartsWith("page://") ? "page" : "site", 
+                        url.Replace("page://", "https://").Replace("site://", "https://"), 
+                        index: true, 
+                        store: true)})),
                 model);
-
-            //for (int i = 0;i < urls.Length;i++)
-            //{
-            //    foreach (var vector in model.Tokenize(urls[i]))
-            //    {
-            //        tree.MergeOrAddConcurrent(new VectorNode(vector: vector, docId: i), model);
-            //    }
-            //}
 
             return RedirectToAction("Index", "Search", new { queryId, field = new string[] { "title", "text" } });
         }
@@ -89,12 +85,12 @@ namespace Sir.HttpServer.Controllers
                 return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = ex.Message });
             }
 
-            var urlList = Request.Query["urls"].ToList();
+            var urlList = Request.Query["urls"].Where(s=>!string.IsNullOrWhiteSpace(s)).ToList();
 
-            if (urlList.Count == 0)
-            {
-                urlList.Add("site://en.wikipedia.org");
-            }
+            //if (urlList.Count == 0)
+            //{
+            //    urlList.Add("site://en.wikipedia.org");
+            //}
 
             if (scope == "page")
             {
