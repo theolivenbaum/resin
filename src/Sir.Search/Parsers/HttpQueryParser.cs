@@ -22,7 +22,7 @@ namespace Sir.Search
             _parser = parser;
         }
 
-        public async Task<Query> ParseRequest(HttpRequest request, params string[] collections)
+        public async Task<Query> ParseRequest(HttpRequest request, IEnumerable<string> collections = null)
         {
             string[] select = request.Query["select"].ToArray();
 

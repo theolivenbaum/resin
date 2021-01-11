@@ -18,12 +18,10 @@ namespace Sir.Search
             _streamReaders = new Dictionary<ulong, DocumentReader>();
         }
 
-        public virtual void Dispose()
+
+        public int Count(ulong collectionId)
         {
-            foreach (var reader in _streamReaders.Values)
-            {
-                reader.Dispose();
-            }
+            return GetOrCreateDocumentReader(collectionId).DocumentCount();
         }
 
         public IEnumerable<Document> ReadDocuments(
@@ -234,5 +232,14 @@ namespace Sir.Search
 
             return reader;
         }
+
+        public virtual void Dispose()
+        {
+            foreach (var reader in _streamReaders.Values)
+            {
+                reader.Dispose();
+            }
+        }
+
     }
 }

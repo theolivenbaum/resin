@@ -30,4 +30,8 @@
     <input type="hidden" value="title" name="select" id="select" />
     <input type="hidden" value="url" name="select" id="select" />
     <input type="hidden" value="@Context.Request.Query["queryId"]" name="queryId" id="queryId" />
+    foreach (var field in fields)
+    {
+        <input type="hidden" name="field" id="field" value="@field" />
+    }
 }

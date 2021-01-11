@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -47,26 +48,20 @@ namespace Sir.HttpServer
                 skip = int.Parse(request.Query["skip"]);
 
             var queryId = request.Query["queryId"].ToString();
-
             var userDirectory = Path.Combine(_config.Get("user_dir"), queryId);
             var urlCollectionId = "url".ToHash();
-            var siteUrls = new List<string>();
-            var pageUrls = new List<string>();
+            var collections = new List<string>();
 
             using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
             {
                 foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "site"))
                 {
-                    siteUrls.Add(url);
+                    collections.Add(new Uri(url).Host);
                 }
-            }
-
-            using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
-            {
-                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
-                {
-                    pageUrls.Add(url);
-                }
+                //foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
+                //{
+                //    urls.Add(("page", url));
+                //}
             }
 
             //if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "page".ToHash(), out pageKeyId))
@@ -89,7 +84,7 @@ namespace Sir.HttpServer
             //    }
             //}
 
-            var query = await _httpQueryParser.ParseRequest(request);
+            var query = await _httpQueryParser.ParseRequest(request, collections);
 
             if (query == null)
             {

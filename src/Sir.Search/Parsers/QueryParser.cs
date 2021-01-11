@@ -38,7 +38,7 @@ namespace Sir.Search
         }
 
         public Query Parse(
-            string[] collections,
+            IEnumerable<string> collections,
             T q, 
             string[] fields, 
             IEnumerable<string> select, 
