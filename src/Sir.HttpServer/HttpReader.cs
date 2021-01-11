@@ -49,29 +49,45 @@ namespace Sir.HttpServer
             var queryId = request.Query["queryId"].ToString();
 
             var userDirectory = Path.Combine(_config.Get("user_dir"), queryId);
-            var userUrlCollection = "url".ToHash();
-            long pageKeyId;
-            long siteKeyId;
-            VectorNode pageIndex = null;
-            VectorNode siteIndex = null;
+            var urlCollectionId = "url".ToHash();
+            var siteUrls = new List<string>();
+            var pageUrls = new List<string>();
 
-            if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "page".ToHash(), out pageKeyId))
+            using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
             {
-                using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ix")))
-                using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.vec")))
+                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "site"))
                 {
-                    pageIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+                    siteUrls.Add(url);
                 }
             }
 
-            if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "site".ToHash(), out siteKeyId))
+            using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
             {
-                using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ix")))
-                using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.vec")))
+                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
                 {
-                    siteIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model);
+                    pageUrls.Add(url);
                 }
             }
+
+            //if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "page".ToHash(), out pageKeyId))
+            //{
+            //    using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ix")))
+            //    using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.vec")))
+            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ixtp"))))
+            //    {
+            //        pageIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model, pageIndexReader.Get(0).length);
+            //    }
+            //}
+
+            //if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "site".ToHash(), out siteKeyId))
+            //{
+            //    using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ix")))
+            //    using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.vec")))
+            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ixtp"))))
+            //    {
+            //        siteIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model, pageIndexReader.Get(0).length);
+            //    }
+            //}
 
             var query = await _httpQueryParser.ParseRequest(request);
 

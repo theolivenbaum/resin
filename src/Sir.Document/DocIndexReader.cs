@@ -14,7 +14,7 @@ namespace Sir.Documents
         {
             get
             {
-                return ((int)_stream.Length / DocIndexWriter.BlockSize) - 1;
+                return ((int)_stream.Length / DocIndexWriter.BlockSize);
             }
         }
 

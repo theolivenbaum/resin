@@ -78,6 +78,32 @@ namespace Sir.Search
             }
         }
 
+        public IEnumerable<T> ReadDocumentValues<T>(
+            ulong collectionId,
+            string field,
+            int skip = 0,
+            int take = 0)
+        {
+            var documentReader = GetOrCreateDocumentReader(collectionId);
+            var docCount = documentReader.DocumentCount();
+
+            if (take == 0)
+                take = docCount;
+
+            var took = 0;
+            long docId = skip;
+
+            while (docId < docCount && took++ < take)
+            {
+                var value = ReadDocumentValue<T>((collectionId, docId), field, documentReader);
+
+                if (value != null)
+                    yield return value;
+
+                docId++;
+            }
+        }
+
         public IEnumerable<Document> ReadDocuments(
             DocumentReader documentReader,
             HashSet<string> select,
@@ -125,6 +151,34 @@ namespace Sir.Search
             }
 
             return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
+        }
+
+        public T ReadDocumentValue<T>(
+            (ulong collectionId, long docId) doc,
+            string field,
+            DocumentReader streamReader)
+        {
+            var docInfo = streamReader.GetDocumentAddress(doc.docId);
+            var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
+            T value = default(T);
+
+            for (int i = 0; i < docMap.Count; i++)
+            {
+                var kvp = docMap[i];
+                var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
+                var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
+
+                if (key == field)
+                {
+                    var vInfo = streamReader.GetAddressOfValue(kvp.valId);
+
+                    value = (T)streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
+
+                    break;
+                }
+            }
+
+            return value;
         }
 
         public IEnumerable<VectorNode> ReadDocumentVectors<T>(

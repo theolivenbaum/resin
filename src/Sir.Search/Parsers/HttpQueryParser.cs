@@ -22,13 +22,15 @@ namespace Sir.Search
             _parser = parser;
         }
 
-        public async Task<Query> ParseRequest(HttpRequest request)
+        public async Task<Query> ParseRequest(HttpRequest request, params string[] collections)
         {
             string[] select = request.Query["select"].ToArray();
 
             if (request.Method == "GET")
             {
-                string[] collections = request.Query["collection"].ToArray();
+                if (collections == null)
+                    collections = request.Query["collection"].ToArray();
+
                 var naturalLanguage = request.Query["q"].ToString();
                 string[] fields = request.Query["field"].ToArray();
                 bool and = request.Query.ContainsKey("AND");

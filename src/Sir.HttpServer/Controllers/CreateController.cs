@@ -59,8 +59,8 @@ namespace Sir.HttpServer.Controllers
                 collectionId,
                 urls.Select(url => new Document(new Field[] { 
                     new Field(
-                        url.StartsWith("page://") ? "page" : "site", 
-                        url.Replace("page://", "https://").Replace("site://", "https://"), 
+                        name: url.StartsWith("page://") ? "page" : "site", 
+                        value: url.Replace("page://", "https://").Replace("site://", "https://"), 
                         index: true, 
                         store: true)})),
                 model);

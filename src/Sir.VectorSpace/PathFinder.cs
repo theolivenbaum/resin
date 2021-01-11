@@ -245,16 +245,17 @@ namespace Sir.VectorSpace
             return node;
         }
 
-        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, IModel model)
+        public static VectorNode DeserializeTree(Stream indexStream, Stream vectorStream, IModel model, long pageSize)
         {
             VectorNode root = new VectorNode();
             VectorNode cursor = root;
-            var tail = new Stack<VectorNode>();
+            var stack = new Stack<VectorNode>();
             var buf = new byte[VectorNode.BlockSize];
+            long read = 0;
 
-            while (true)
+            while (read < pageSize)
             {
-                var read = indexStream.Read(buf);
+                read += indexStream.Read(buf);
 
                 if (read == 0)
                     break;
@@ -264,7 +265,7 @@ namespace Sir.VectorSpace
                 if (node.Terminator == 0) // there is both a left and a right child
                 {
                     cursor.Left = node;
-                    tail.Push(cursor);
+                    stack.Push(cursor);
                 }
                 else if (node.Terminator == 1) // there is a left but no right child
                 {
@@ -276,9 +277,9 @@ namespace Sir.VectorSpace
                 }
                 else // there are no children
                 {
-                    if (tail.Count > 0)
+                    if (stack.Count > 0)
                     {
-                        tail.Pop().Right = node;
+                        stack.Pop().Right = node;
                     }
                 }
 
