@@ -16,8 +16,6 @@ namespace Sir.HttpServer
     /// </summary>
     public class HttpReader : IHttpReader
     {
-        public string ContentType => "application/json";
-
         private readonly ILogger<HttpReader> _logger;
         private readonly StreamFactory _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
