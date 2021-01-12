@@ -76,7 +76,7 @@ namespace Sir.HttpServer.Controllers
             new SaveAsJob<string>
                 (
                     _config.Get("data_dir"),
-                    sessionFactory: SessionFactory,
+                    sessionFactory: StreamFactory,
                     queryParser: _queryParser,
                     model: _model,
                     logger: _log,

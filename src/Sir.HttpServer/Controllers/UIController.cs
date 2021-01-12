@@ -12,7 +12,7 @@ namespace Sir.HttpServer.Controllers
         private IConfigurationProvider config;
 
         protected IConfigurationProvider Config { get; }
-        protected StreamFactory SessionFactory => _sessionFactory;
+        protected StreamFactory StreamFactory => _sessionFactory;
 
         public UIController(IConfigurationProvider config, StreamFactory sessionFactory)
         {

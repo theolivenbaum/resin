@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Sir.Search;
-using Sir.VectorSpace;
 using System;
 using System.IO;
 using System.Linq;
@@ -54,7 +53,7 @@ namespace Sir.HttpServer.Controllers
             var model = new BagOfCharsModel();
             var collectionId = "url".ToHash();
 
-            SessionFactory.Write(
+            StreamFactory.Write(
                 userDirectory,
                 collectionId,
                 urls.Select(url => new Document(new Field[] { 
@@ -85,12 +84,7 @@ namespace Sir.HttpServer.Controllers
                 return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = ex.Message });
             }
 
-            var urlList = Request.Query["urls"].Where(s=>!string.IsNullOrWhiteSpace(s)).ToList();
-
-            //if (urlList.Count == 0)
-            //{
-            //    urlList.Add("site://en.wikipedia.org");
-            //}
+            var urlList = Request.Query["urls"].Where(s=>!string.IsNullOrWhiteSpace(s)).Select(s=>new Uri(s).ToString()).ToList();
 
             if (scope == "page")
             {

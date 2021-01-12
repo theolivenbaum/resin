@@ -73,7 +73,7 @@ namespace Sir.HttpServer.Controllers
 
             _queue.Enqueue(new CrawlJob(
                 _config.Get("data_dir"),
-                SessionFactory,
+                StreamFactory,
                 _queryParser,
                 _model,
                 _log,
