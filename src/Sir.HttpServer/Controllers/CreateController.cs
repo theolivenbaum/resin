@@ -77,6 +77,20 @@ namespace Sir.HttpServer.Controllers
             if (urls.Length == 0 || urls[0] == null)
                 return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = "URL list is empty." });
 
+            //validate that all entries are parsable into Uris
+            try
+            {
+                var uris = new List<Uri>();
+                foreach (var url in urls)
+                {
+                    uris.Add(new Uri(url.Replace("page://", "https://").Replace("site://", "https://")));
+                }
+            }
+            catch (Exception ex)
+            {
+                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = $"URL list is not valid. {ex}" });
+            }
+
             var queryId = Guid.NewGuid().ToString();
             var userDirectory = Path.Combine(Config.Get("user_dir"), queryId);
 
