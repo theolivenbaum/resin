@@ -17,12 +17,14 @@ namespace Sir.Search
     /// </summary>
     public class StreamFactory : IDisposable, IStreamFactory
     {
-        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> _keys;
+        private IDictionary<ulong, IDictionary<ulong, long>> _keys;
         private ILogger _logger;
+        private readonly object _syncKeys = new object();
 
         public StreamFactory(ILogger logger = null)
         {
             _logger = logger;
+            _keys = new Dictionary<ulong, IDictionary<ulong, long>>();
 
             LogInformation($"sessionfactory initiated");
         }
@@ -59,12 +61,10 @@ namespace Sir.Search
                 count++;
             }
 
-            if (_keys == null)
+            lock (_syncKeys)
             {
-                RefreshKeys(directory);
+                _keys.Remove(collectionId, out _);
             }
-
-            _keys.Remove(collectionId, out _);
 
             LogInformation($"truncated collection {collectionId} ({count} files affected)");
         }
@@ -113,11 +113,6 @@ namespace Sir.Search
             {
                 File.Move(file, file.Replace(from, to));
                 count++;
-            }
-
-            if (_keys == null)
-            {
-                RefreshKeys(directory);
             }
 
             _keys.Remove(currentCollectionId, out _);
@@ -326,70 +321,65 @@ namespace Sir.Search
                    4096, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
         }
 
-        public void RefreshKeys(string directory)
+        private void ReadKeys(string directory)
         {
-            _keys = LoadKeys(directory);
-        }
-
-        private ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>> LoadKeys(string directory)
-        {
-            var timer = Stopwatch.StartNew();
-            var allkeys = new ConcurrentDictionary<ulong, ConcurrentDictionary<ulong, long>>();
-
-            if (directory == null)
-            {
-                return allkeys;
-            }
-
             foreach (var keyFile in Directory.GetFiles(directory, "*.kmap"))
             {
                 var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
-                ConcurrentDictionary<ulong, long> keys;
+                IDictionary<ulong, long> keys;
 
-                if (!allkeys.TryGetValue(collectionId, out keys))
+                if (!_keys.TryGetValue(collectionId, out keys))
                 {
-                    keys = new ConcurrentDictionary<ulong, long>();
-                    allkeys.GetOrAdd(collectionId, keys);
-                }
+                    keys = new Dictionary<ulong, long>();
 
-                using (var stream = new FileStream(keyFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    long i = 0;
-                    var buf = new byte[sizeof(ulong)];
-                    var read = stream.Read(buf, 0, buf.Length);
+                    var timer = Stopwatch.StartNew();
 
-                    while (read > 0)
+                    using (var stream = new FileStream(keyFile, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        keys.GetOrAdd(BitConverter.ToUInt64(buf, 0), i++);
+                        long i = 0;
+                        var buf = new byte[sizeof(ulong)];
+                        var read = stream.Read(buf, 0, buf.Length);
 
-                        read = stream.Read(buf, 0, buf.Length);
+                        while (read > 0)
+                        {
+                            keys.Add(BitConverter.ToUInt64(buf, 0), i++);
+
+                            read = stream.Read(buf, 0, buf.Length);
+                        }
                     }
+
+                    lock (_syncKeys)
+                    {
+                        _keys.Add(collectionId, keys);
+                    }
+
+                    LogInformation($"loaded key mappings into memory from directory {directory} in {timer.Elapsed}");
                 }
             }
-
-            LogInformation($"loaded keyHash -> keyId mappings into memory for {allkeys.Count} collections in {timer.Elapsed}");
-
-            return allkeys;
         }
 
         public void RegisterKeyMapping(string directory, ulong collectionId, ulong keyHash, long keyId)
         {
-            if (_keys == null)
+            if (!_keys.TryGetValue(collectionId, out _))
             {
-                RefreshKeys(directory);
+                ReadKeys(directory);
             }
 
-            ConcurrentDictionary<ulong, long> keys;
+            IDictionary<ulong, long> keys;
 
             if (!_keys.TryGetValue(collectionId, out keys))
             {
                 keys = new ConcurrentDictionary<ulong, long>();
-                _keys.GetOrAdd(collectionId, keys);
+
+                lock (_syncKeys)
+                {
+                    _keys.Add(collectionId, keys);
+                }
             }
 
             if (!keys.ContainsKey(keyHash))
             {
-                keys.GetOrAdd(keyHash, keyId);
+                keys.Add(keyHash, keyId);
 
                 using (var stream = CreateAppendStream(directory, collectionId, "kmap"))
                 {
@@ -400,30 +390,40 @@ namespace Sir.Search
 
         public long GetKeyId(string directory, ulong collectionId, ulong keyHash)
         {
-            if (_keys == null)
+            IDictionary<ulong, long> keys;
+
+            if (!_keys.TryGetValue(collectionId, out keys))
             {
-                RefreshKeys(directory);
+                ReadKeys(directory);
             }
 
-            return _keys[collectionId][keyHash];
+            if (keys != null || _keys.TryGetValue(collectionId, out keys))
+            {
+                return keys[keyHash];
+            }
+
+            throw new Exception($"unable to find key {keyHash} for collection {collectionId} in directory {directory}.");
         }
 
         public bool TryGetKeyId(string directory, ulong collectionId, ulong keyHash, out long keyId)
         {
-            if (_keys == null)
+            IDictionary<ulong, long> keys;
+
+            if (!_keys.TryGetValue(collectionId, out keys))
             {
-                RefreshKeys(directory);
+                ReadKeys(directory);
             }
 
-            var keys = _keys.GetOrAdd(collectionId, new ConcurrentDictionary<ulong, long>());
-
-            if (!keys.TryGetValue(keyHash, out keyId))
+            if (keys != null || _keys.TryGetValue(collectionId, out keys))
             {
-                keyId = -1;
-                return false;
+                if (keys.TryGetValue(keyHash, out keyId))
+                {
+                    return true;
+                }
             }
 
-            return true;
+            keyId = -1;
+            return false;
         }
 
         public Stream CreateAsyncReadStream(string fileName)
