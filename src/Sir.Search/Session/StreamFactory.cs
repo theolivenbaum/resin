@@ -137,7 +137,7 @@ namespace Sir.Search
                 TruncateIndex(directory, collectionId);
 
             using (var debugger = new IndexDebugger(_logger, reportFrequency))
-            using (var documents = new DocumentStreamSession(directory, this))
+            using (var documents = new ReadDocumentSession(directory, this))
             {
                 using (var writeQueue = new ProducerConsumerQueue<IndexSession<T>>(indexSession =>
                 {

@@ -135,14 +135,10 @@ namespace Sir.Documents
             _docIx.Put(docId, offset, len);
         }
 
-        public void Flush()
+        public void UpdateValue(long offset, object value)
         {
-            _vals.Flush();
-            _keys.Flush();
-            _docs.Flush();
-            _valIx.Flush();
-            _keyIx.Flush();
-            _docIx.Flush();
+            _vals.Stream.Seek(offset, System.IO.SeekOrigin.Begin);
+            _vals.Put(value);
         }
 
         public void Dispose()

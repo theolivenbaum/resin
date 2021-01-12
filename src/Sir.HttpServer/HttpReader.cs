@@ -52,7 +52,7 @@ namespace Sir.HttpServer
             var urlCollectionId = "url".ToHash();
             var collections = new List<string>();
 
-            using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
+            using (var documentReader = new ReadDocumentSession(userDirectory, _sessionFactory))
             {
                 foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "site"))
                 {

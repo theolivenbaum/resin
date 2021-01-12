@@ -11,7 +11,7 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting multiple collections.
     /// </summary>
-    public class SearchSession : DocumentStreamSession, IDisposable, ISearchSession
+    public class SearchSession : ReadDocumentSession, IDisposable, ISearchSession
     {
         private readonly StreamFactory _sessionFactory;
         private readonly IModel _model;

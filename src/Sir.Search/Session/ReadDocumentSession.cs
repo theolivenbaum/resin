@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class DocumentStreamSession : IDisposable
+    public class ReadDocumentSession : IDisposable
     {
         private readonly string _directory;
         protected readonly StreamFactory SessionFactory;
         private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
-        public DocumentStreamSession(string directory, StreamFactory sessionFactory) 
+        public ReadDocumentSession(string directory, StreamFactory sessionFactory) 
         {
             _directory = directory;
             SessionFactory = sessionFactory;
