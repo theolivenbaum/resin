@@ -58,31 +58,11 @@ namespace Sir.HttpServer
                 {
                     collections.Add(new Uri(url).Host);
                 }
-                //foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
-                //{
-                //    urls.Add(("page", url));
-                //}
+                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
+                {
+                    collections.Add(new Uri(url).Host);
+                }
             }
-
-            //if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "page".ToHash(), out pageKeyId))
-            //{
-            //    using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ix")))
-            //    using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.vec")))
-            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{pageKeyId}.ixtp"))))
-            //    {
-            //        pageIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model, pageIndexReader.Get(0).length);
-            //    }
-            //}
-
-            //if (_sessionFactory.TryGetKeyId(userDirectory, userUrlCollection, "site".ToHash(), out siteKeyId))
-            //{
-            //    using (var ixStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ix")))
-            //    using (var vectorStream = _sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.vec")))
-            //    using (var pageIndexReader = new PageIndexReader(_sessionFactory.CreateReadStream(Path.Combine(userDirectory, $"{userUrlCollection}.{siteKeyId}.ixtp"))))
-            //    {
-            //        siteIndex = PathFinder.DeserializeTree(ixStream, vectorStream, model, pageIndexReader.Get(0).length);
-            //    }
-            //}
 
             var query = await _httpQueryParser.ParseRequest(request, collections);
 
