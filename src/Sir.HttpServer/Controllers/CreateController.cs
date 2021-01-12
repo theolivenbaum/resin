@@ -66,7 +66,7 @@ namespace Sir.HttpServer.Controllers
             return Redirect(returnUrl);
         }
 
-        [HttpGet("/createindex")]
+        [HttpPost("/createindex")]
         public ActionResult CreateIndex(string[] urls, string agree)
         {
             if (agree != "yes")
@@ -112,7 +112,7 @@ namespace Sir.HttpServer.Controllers
                 documents,
                 model);
 
-            return RedirectToAction("Index", "Search", new { queryId, field = new string[] { "title", "text" } });
+            return RedirectToAction("Index", "Search", new { queryId });
         }
     }
 

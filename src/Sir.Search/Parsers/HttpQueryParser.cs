@@ -23,9 +23,10 @@ namespace Sir.Search
             _parser = parser;
         }
 
-        public async Task<Query> ParseRequest(HttpRequest request, IEnumerable<string> collections = null, IEnumerable<string> fields = null)
+        public async Task<Query> ParseRequest(HttpRequest request, IEnumerable<string> collections = null, IEnumerable<string> fields = null, IEnumerable<string> select = null)
         {
-            string[] select = request.Query["select"].ToArray();
+            if (select == null)
+                select = request.Query["select"].ToArray();
 
             if (request.Method == "GET")
             {
