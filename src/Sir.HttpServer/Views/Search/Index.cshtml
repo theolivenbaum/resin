@@ -1,7 +1,8 @@
 ﻿@model Sir.Search.SearchResult
 
 @{
-    ViewBag.Title = Context.Request.Query["q"] + " - CrawlCrawler";
+    var q = Context.Request.Query["q"].ToString();
+    ViewBag.Title = (string.IsNullOrWhiteSpace(q) ? "Your personal search engine" : q) + " - CrawlCrawler";
     Layout = "~/Views/_Layout.cshtml";
 }
 @{await Html.RenderPartialAsync("SearchForm");}

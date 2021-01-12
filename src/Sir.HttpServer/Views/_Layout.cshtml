@@ -9,13 +9,13 @@
 <body>
     <div class="outer-container">
         <div class="logo1">
-            <a href="/"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            <a href="/search?queryId=@Context.Request.Query["queryId"]&field=title&field=text"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
         </div>
         @RenderBody()
     </div>
     <footer>
         <div class="footer-nav">
-            <p><a href="/terms#dos">Description of this service</a> | <a href="/terms">Terms</a></p>
+            <p><a href="/">Create new index</a> | <a href="/about">About</a> | <a href="/terms">Terms</a> | <a href="https://github.com/kreeben/resin/issues">Report issue</a></p>
         </div>
     </footer>
 </body>
