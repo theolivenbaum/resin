@@ -1,17 +1,5 @@
 ﻿@{
     var query = Context.Request.Query["q"].ToString();
-    var submittedFields = new HashSet<string>(Context.Request.Query.ContainsKey("field")
-        ? Context.Request.Query["field"].ToArray()
-                    .SelectMany(x => x.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                    .ToArray()
-        : new string[0]);
-    var fields = new HashSet<string>(submittedFields.Concat((string[])ViewBag.DefaultFields));
-    var submittedCollections = Context.Request.Query["collection"]
-        .ToArray()
-        .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries))
-        .ToArray();
-
-    var collections = new HashSet<string>(submittedCollections.Concat((IEnumerable<string>)ViewBag.DefaultCollection));
 }
 
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
@@ -29,9 +17,5 @@
     <input type="hidden" value="100" name="take" id="take" />
     <input type="hidden" value="title" name="select" id="select" />
     <input type="hidden" value="url" name="select" id="select" />
-    <input type="hidden" value="@Context.Request.Query["queryId"]" name="queryId" id="queryId" />
-    foreach (var field in fields)
-    {
-        <input type="hidden" name="field" id="field" value="@field" />
-    }
+    <input type="hidden" value="@Context.Request.Query["queryId"].ToString()" name="queryId" id="queryId" />
 }

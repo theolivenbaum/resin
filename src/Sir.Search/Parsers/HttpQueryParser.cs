@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sir.Search
@@ -22,7 +23,7 @@ namespace Sir.Search
             _parser = parser;
         }
 
-        public async Task<Query> ParseRequest(HttpRequest request, IEnumerable<string> collections = null)
+        public async Task<Query> ParseRequest(HttpRequest request, IEnumerable<string> collections = null, IEnumerable<string> fields = null)
         {
             string[] select = request.Query["select"].ToArray();
 
@@ -31,12 +32,14 @@ namespace Sir.Search
                 if (collections == null)
                     collections = request.Query["collection"].ToArray();
 
+                if (fields == null)
+                    fields = request.Query["field"].ToArray();
+
                 var naturalLanguage = request.Query["q"].ToString();
-                string[] fields = request.Query["field"].ToArray();
                 bool and = request.Query.ContainsKey("AND");
                 bool or = !and && request.Query.ContainsKey("OR");
 
-                return _parser.Parse(collections, naturalLanguage, fields, select, and, or);
+                return _parser.Parse(collections, naturalLanguage, fields.ToArray(), select, and, or);
             }
             else
             {

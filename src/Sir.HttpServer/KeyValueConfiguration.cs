@@ -14,10 +14,10 @@ namespace Sir
             _doc = new Dictionary<string, string>();
             _fileName = Path.Combine(Directory.GetCurrentDirectory(), readFromFileName);
 
-            OnFileChanged();
+            ReadSettingsFromDisk();
         }
 
-        private void OnFileChanged()
+        private void ReadSettingsFromDisk()
         {
             var dic = new Dictionary<string, string>();
 
@@ -49,6 +49,11 @@ namespace Sir
             }
 
             return val;
+        }
+
+        public string[] GetMany(string key)
+        {
+            return Get(key).Split(',', StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }
