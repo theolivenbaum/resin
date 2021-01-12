@@ -59,7 +59,7 @@ namespace Sir.HttpServer.Controllers
                 urls.Select(url => new Document(new Field[] { 
                     new Field(
                         name: url.StartsWith("page://") ? "page" : "site", 
-                        value: url.Replace("page://", "https://").Replace("site://", "https://"), 
+                        value: new Uri(url.Replace("page://", "https://").Replace("site://", "https://")).ToString(), 
                         index: true, 
                         store: true)})),
                 model);
