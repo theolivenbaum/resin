@@ -11,7 +11,7 @@ namespace Sir.Search
     /// <summary>
     /// Read session targeting multiple collections.
     /// </summary>
-    public class SearchSession : ReadDocumentSession, IDisposable, ISearchSession
+    public class SearchSession : DocumentStreamSession, IDisposable, ISearchSession
     {
         private readonly StreamFactory _sessionFactory;
         private readonly IModel _model;
@@ -135,7 +135,7 @@ namespace Sir.Search
 
             foreach (var d in docIds)
             {
-                var doc = ReadDoc(d.Key, select, d.Value * scoreMultiplier);
+                var doc = ReadDocument(d.Key, select, d.Value * scoreMultiplier);
                 result.Add(doc);
             }
 

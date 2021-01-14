@@ -43,6 +43,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Mnist", "Sir.Mnist\Sir.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sir.Wikipedia", "Sir.Wikipedia\Sir.Wikipedia.csproj", "{6F3C960C-7652-430C-A253-081E1506BA81}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sir.Crawl", "Sir.Crawl\Sir.Crawl.csproj", "{C529285B-07EC-4DA2-A6DC-1710DAE286FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{6F3C960C-7652-430C-A253-081E1506BA81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F3C960C-7652-430C-A253-081E1506BA81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F3C960C-7652-430C-A253-081E1506BA81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C529285B-07EC-4DA2-A6DC-1710DAE286FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C529285B-07EC-4DA2-A6DC-1710DAE286FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C529285B-07EC-4DA2-A6DC-1710DAE286FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C529285B-07EC-4DA2-A6DC-1710DAE286FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{304CAC1B-825A-4D89-AE4C-9C0FC5206607} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
 		{436647C9-EDFF-44AD-AF2F-ABC4EBA70ED7} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
 		{6F3C960C-7652-430C-A253-081E1506BA81} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
+		{C529285B-07EC-4DA2-A6DC-1710DAE286FB} = {B97268C5-0BFA-4022-BA3F-C07C1F239C8D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {60BC16EF-AAA7-498C-A62A-56F3F740FC89}

@@ -203,7 +203,7 @@ namespace Sir.Cmd
             var model = new BagOfCharsModel();
 
             using (var sessionFactory = new StreamFactory(logger))
-            using (var documents = new ReadDocumentSession(dataDirectory, sessionFactory))
+            using (var documents = new DocumentStreamSession(dataDirectory, sessionFactory))
             using (var documentReader = new DocumentReader(dataDirectory, collectionId, sessionFactory))
             {
                 var doc = documents.ReadDocument((collectionId, documentId), select, documentReader);

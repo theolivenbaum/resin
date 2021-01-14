@@ -3,12 +3,12 @@ using System;
 
 namespace Sir.Search
 {
-    public class UpdateDocumentSession : IDisposable
+    public class UpdateSession : IDisposable
     {
         private readonly DocumentReader _reader;
         private readonly DocumentWriter _writer;
 
-        public UpdateDocumentSession(string directory, ulong collectionId, StreamFactory sessionFactory) 
+        public UpdateSession(string directory, ulong collectionId, StreamFactory sessionFactory) 
         {
             _reader = new DocumentReader(directory, collectionId, sessionFactory);
             _writer = new DocumentWriter(directory, collectionId, sessionFactory);

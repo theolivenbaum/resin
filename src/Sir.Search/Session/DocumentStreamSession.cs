@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Sir.Search
 {
-    public class ReadDocumentSession : IDisposable
+    public class DocumentStreamSession : IDisposable
     {
         private readonly string _directory;
         protected readonly StreamFactory SessionFactory;
         private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
-        public ReadDocumentSession(string directory, StreamFactory sessionFactory) 
+        public DocumentStreamSession(string directory, StreamFactory sessionFactory) 
         {
             _directory = directory;
             SessionFactory = sessionFactory;
@@ -122,35 +122,6 @@ namespace Sir.Search
             }
         }
 
-        public Document ReadDocument(
-            (ulong collectionId, long docId) doc,
-            HashSet<string> select,
-            DocumentReader streamReader,
-            double? score = null
-            )
-        {
-            var docInfo = streamReader.GetDocumentAddress(doc.docId);
-            var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
-            var fields = new List<Field>();
-
-            for (int i = 0; i < docMap.Count; i++)
-            {
-                var kvp = docMap[i];
-                var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
-                var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
-
-                if (select.Contains(key))
-                {
-                    var vInfo = streamReader.GetAddressOfValue(kvp.valId);
-                    var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
-
-                    fields.Add(new Field(key, val, kvp.keyId));
-                }
-            }
-
-            return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
-        }
-
         public T ReadDocumentValue<T>(
             (ulong collectionId, long docId) doc,
             string field,
@@ -210,7 +181,7 @@ namespace Sir.Search
             }
         }
 
-        public Document ReadDoc(
+        public Document ReadDocument(
             (ulong collectionId, long docId) docId,
             HashSet<string> select,
             double? score = null)
@@ -218,6 +189,34 @@ namespace Sir.Search
             var streamReader = GetOrCreateDocumentReader(docId.collectionId);
 
             return ReadDocument(docId, select, streamReader, score);
+        }
+
+        public Document ReadDocument(
+            (ulong collectionId, long docId) doc,
+            HashSet<string> select,
+            DocumentReader streamReader,
+            double? score = null)
+        {
+            var docInfo = streamReader.GetDocumentAddress(doc.docId);
+            var docMap = streamReader.GetDocumentMap(docInfo.offset, docInfo.length);
+            var fields = new List<Field>();
+
+            for (int i = 0; i < docMap.Count; i++)
+            {
+                var kvp = docMap[i];
+                var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
+                var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
+
+                if (select.Contains(key))
+                {
+                    var vInfo = streamReader.GetAddressOfValue(kvp.valId);
+                    var val = streamReader.GetValue(vInfo.offset, vInfo.len, vInfo.dataType);
+
+                    fields.Add(new Field(key, val, kvp.keyId));
+                }
+            }
+
+            return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)
@@ -240,6 +239,5 @@ namespace Sir.Search
                 reader.Dispose();
             }
         }
-
     }
 }
