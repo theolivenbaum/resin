@@ -14,7 +14,7 @@ namespace Sir.Crawl
 {
     public class CrawlUserDirectoryCommand : ICommand
     {
-        private readonly HashSet<string> _select = new HashSet<string> { "page", "site", "last_crawl_date" };
+        private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "last_crawl_date" };
         private readonly HashSet<string> _history = new HashSet<string>();
         private readonly IModel<string> _model = new BagOfCharsModel();
 
@@ -97,7 +97,7 @@ namespace Sir.Crawl
 
             foreach (var node in doc.DocumentNode.DescendantsAndSelf())
             {
-                if (!node.HasChildNodes)
+                if (!node.HasChildNodes && node.ParentNode.Name != "script" && node.ParentNode.Name != "style")
                 {
                     string innerText = node.InnerText;
 
@@ -105,6 +105,8 @@ namespace Sir.Crawl
                         sb.AppendLine(innerText.Trim());
                 }
             }
+
+            
 
             var text = sb.ToString();
 
