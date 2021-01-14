@@ -105,11 +105,18 @@ namespace Sir.HttpServer.Controllers
 
             foreach (var url in urls)
             {
+                var uri = new Uri(url.Replace("page://", "https://").Replace("site://", "https://"));
+
                 documents.Add(new Document(new Field[] 
                 {
                     new Field(
                         "url",
-                        new Uri(url.Replace("page://", "https://").Replace("site://", "https://")).ToString(),
+                        uri.ToString(),
+                        index: false,
+                        store: true),
+                    new Field(
+                        "host",
+                        uri.Host,
                         index: false,
                         store: true),
                     new Field(

@@ -56,13 +56,9 @@ namespace Sir.HttpServer
 
             using (var documentReader = new DocumentStreamSession(userDirectory, _sessionFactory))
             {
-                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "site"))
+                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "host"))
                 {
-                    collections.Add(new Uri(url).Host);
-                }
-                foreach (var url in documentReader.ReadDocumentValues<string>(urlCollectionId, "page"))
-                {
-                    collections.Add(new Uri(url).Host);
+                    collections.Add(url);
                 }
             }
 
@@ -80,7 +76,7 @@ namespace Sir.HttpServer
 
             var queryLog = JsonConvert.SerializeObject(debug);
 
-            _logger.LogDebug($"incoming query: {queryLog}");
+            _logger.LogDebug($"parsed query: {queryLog}");
 #endif
 
             using (var readSession = new SearchSession(_config.Get("data_dir"), _sessionFactory, model, _logger))
