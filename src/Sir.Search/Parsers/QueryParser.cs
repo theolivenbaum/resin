@@ -109,7 +109,7 @@ namespace Sir.Search
             if (_log != null)
             {
                 var queryLog = JsonConvert.SerializeObject(root);
-                _log.LogDebug($"parsed query: {queryLog}");
+                _log.LogDebug($"incoming query: {queryLog}");
             }
 
             return Parse(root, select);

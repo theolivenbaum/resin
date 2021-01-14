@@ -51,9 +51,9 @@ namespace Sir.Search
             _logger.LogDebug($"scanning took {timer.Elapsed}");
             timer.Restart();
 
-            // Resolve
-            Resolver.Resolve(query, _sessionFactory);
-            _logger.LogDebug($"resolving took {timer.Elapsed}");
+            // Materialize
+            Materializer.Materialize(query, _sessionFactory);
+            _logger.LogDebug($"materializing took {timer.Elapsed}");
             timer.Restart();
 
             // Reduce

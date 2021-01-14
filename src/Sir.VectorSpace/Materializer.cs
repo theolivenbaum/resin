@@ -2,20 +2,20 @@
 
 namespace Sir.VectorSpace
 {
-    public static class Resolver
+    public static class Materializer
     {
         /// <summary>
-        /// Resolve posting list locations into document IDs.
+        /// Read document IDs into memory.
         /// </summary>
-        public static void Resolve(Query query, IStreamFactory sessionFactory)
+        public static void Materialize(Query query, IStreamFactory sessionFactory)
         {
             Parallel.ForEach(query.AllTerms(), term =>
             {
-                Resolve(term, new PostingsReader(term.Directory, sessionFactory));
+                Materialize(term, new PostingsReader(term.Directory, sessionFactory));
             });
         }
 
-        public static void Resolve(Term term, PostingsReader postingsReader)
+        public static void Materialize(Term term, PostingsReader postingsReader)
         {
             if (term.PostingsOffsets == null)
                 return;
