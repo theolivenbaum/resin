@@ -35,13 +35,13 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var sessionFactory = new StreamFactory(logger))
-            using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, sessionFactory)))
+            using (var database = new StreamFactory(logger))
+            using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, database)))
             using (var indexSession = new IndexSession<string>(model, model))
             {
                 using (var queue = new ProducerConsumerQueue<Document>(document =>
                 {
-                    sessionFactory.Write(document, writeSession, indexSession);
+                    database.Put(document, writeSession, indexSession);
                 }))
                 {
                     foreach (var document in ReadWatFile(fileName, refFileName).Select(dic =>
@@ -56,7 +56,7 @@ namespace Sir.CommonCrawl
                     }
                 }
 
-                using (var stream = new WritableIndexStream(dataDirectory, collectionId, sessionFactory, logger: logger))
+                using (var stream = new WritableIndexStream(dataDirectory, collectionId, database, logger: logger))
                 {
                     stream.Write(indexSession.GetInMemoryIndex());
                 }

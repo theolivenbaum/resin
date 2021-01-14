@@ -64,13 +64,10 @@ namespace Sir.Crawl
                             using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, database)))
                             using (var indexSession = new IndexSession<string>(_model, _model))
                             {
-                                foreach (var document in documents)
-                                {
-                                    database.Write(document, writeSession, indexSession);
-                                }
+                                database.Write(dataDirectory, collectionId, documents, _model);
                             }
 
-                            using (var updateSession = new UpdateSession(userDirectory, urlCollectionId, database))
+                            using (var updateSession = new UpdateSession(directory, urlCollectionId, database))
                             {
                                 updateSession.Update(url.Id, lastCrawlDateKeyId, timeOfCrawl);
                             }
@@ -106,8 +103,6 @@ namespace Sir.Crawl
                 }
             }
 
-            
-
             var text = sb.ToString();
 
             yield return new Document(new Field[]
@@ -120,22 +115,45 @@ namespace Sir.Crawl
 
             if (siteWide)
             {
+                var root = $"{uri.Scheme}://{uri.Host}{uri.PathAndQuery}";
+
                 foreach (HtmlNode link in doc.DocumentNode.SelectNodes("//a[@href]"))
                 {
-                    var linkUri = new Uri(link.Attributes["href"].Value);
+                    var href = link.Attributes["href"].Value;
+                    Uri linkUri = null;
 
-                    if (!_history.Add(linkUri.ToString()))
+                    try
                     {
-                        continue;
-                    }
-
-                    if (linkUri.Host == uri.Host)
-                    {
-                        foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false))
+                        if (href.StartsWith('/'))
                         {
-                            yield return document;
+                            linkUri = new Uri($"{root}{href.Substring(1)}");
+                        }
+                        else if (href.StartsWith("http"))
+                        {
+                            linkUri = new Uri(href);
+                        }
+                        else if (href.Contains('/'))
+                        {
+                            linkUri = new Uri($"{root}{uri.PathAndQuery}{href}");
+                        }
+                    }
+                    catch { }
 
-                            Thread.Sleep(1000);
+                    if (linkUri != null)
+                    {
+                        if (linkUri.Host == uri.Host)
+                        {
+                            if (!_history.Add(linkUri.ToString()))
+                            {
+                                continue;
+                            }
+
+                            foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false))
+                            {
+                                yield return document;
+
+                                Thread.Sleep(1000);
+                            }
                         }
                     }
                 }

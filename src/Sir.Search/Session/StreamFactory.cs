@@ -211,33 +211,27 @@ namespace Sir.Search
             Write(targetDirectory, targetCollectionId, documents, model, reportSize);
         }
 
-        public void Write<T>(ulong collectionId, IEnumerable<Document> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
+        public void Put<T>(IEnumerable<Document> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
         {
-            LogInformation($"writing to collection {collectionId}");
-
-            var time = Stopwatch.StartNew();
             var debugger = new IndexDebugger(_logger, reportSize);
 
             foreach (var document in job)
             {
                 writeSession.Put(document);
 
-                //Parallel.ForEach(document, kv =>
                 foreach (var field in document.Fields)
                 {
                     if (field.Value != null && field.Index)
                     {
                         indexSession.Put(document.Id, field.KeyId, (T)field.Value);
                     }
-                }//);
+                }
 
                 debugger.Step(indexSession);
             }
-
-            _logger.LogInformation($"processed write&index job (collection {collectionId}) in {time.Elapsed}");
         }
 
-        public void Write<T>(
+        public void Put<T>(
             Document document, 
             WriteSession writeSession, 
             IndexSession<T> indexSession)
@@ -305,7 +299,7 @@ namespace Sir.Search
             using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
             using (var indexSession = new IndexSession<T>(model, model))
             {
-                Write(collectionId, job, writeSession, indexSession, reportSize);
+                Put(job, writeSession, indexSession, reportSize);
 
                 using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
                 {
