@@ -216,7 +216,7 @@ namespace Sir.Search
                 }
             }
 
-            return new Document(fields, doc.docId, score.HasValue ? score.Value : 0);
+            return new Document(fields, collectionId:doc.collectionId, documentId:doc.docId, score:(score.HasValue ? score.Value : 0));
         }
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)

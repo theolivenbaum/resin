@@ -9,8 +9,7 @@ namespace Sir.Search
     [JsonConverter(typeof(DocumentJsonConverter))]
     public class Document
     {
-        private long _id;
-
+        public ulong CollectionId { get; set; }
         public long Id { get; set; } 
         public double Score { get; set; }
         public IList<Field> Fields { get; set; }
@@ -27,16 +26,19 @@ namespace Sir.Search
             }
         }
 
+        /// <summary>
+        /// Empty ctor used for over-the-wire serialization.
+        /// </summary>
         public Document()
         {
             Fields = new List<Field>();
         }
 
-        public Document(IEnumerable<Field> fields, long documentId = -1, double score = -1)
+        public Document(IEnumerable<Field> fields, ulong collectionId = ulong.MinValue, long documentId = -1, double score = -1)
         {
-            _id = documentId;
             Id = documentId;
             Score = score;
+            CollectionId = collectionId;
 
             if (fields is IList<Field>)
             {
@@ -48,7 +50,7 @@ namespace Sir.Search
 
                 foreach (var field in Fields)
                 {
-                    field.DocumentId = _id;
+                    field.DocumentId = Id;
 
                     Fields.Add(field);
                 }

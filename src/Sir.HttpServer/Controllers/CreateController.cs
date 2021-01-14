@@ -108,15 +108,20 @@ namespace Sir.HttpServer.Controllers
                 documents.Add(new Document(new Field[] 
                 {
                     new Field(
-                        name: url.StartsWith("page://") ? "page" : "site",
-                        value: new Uri(url.Replace("page://", "https://").Replace("site://", "https://")).ToString(),
+                        "url",
+                        new Uri(url.Replace("page://", "https://").Replace("site://", "https://")).ToString(),
                         index: false,
                         store: true),
                     new Field(
-                        name: "last_crawl_date",
-                        value: DateTime.MinValue,
+                        "last_crawl_date",
+                        DateTime.MinValue,
                         index: false,
-                        store: true)
+                        store: true),
+                    new Field(
+                        "scope", 
+                        url.StartsWith("page://") ? "page" : "site", 
+                        index:false, 
+                        store:true)
                 }));
             }
 
