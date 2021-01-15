@@ -34,7 +34,9 @@ namespace Sir.Search
 
             if (result != null)
             {
-                var docs = ReadDocs(result.SortedDocuments, query.Select, (double)1/query.TotalNumberOfTerms());
+                var numOfTerms = query.TotalNumberOfTerms();
+                var scoreMultiplier = (double)1 / numOfTerms;
+                var docs = ReadDocs(result.SortedDocuments, query.Select, scoreMultiplier);
 
                 return new SearchResult(query, result.Total, docs.Count, docs);
             }

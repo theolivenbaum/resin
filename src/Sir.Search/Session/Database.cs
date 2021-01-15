@@ -26,7 +26,7 @@ namespace Sir.Search
             _logger = logger;
             _keys = new Dictionary<ulong, IDictionary<ulong, long>>();
 
-            LogInformation($"sessionfactory initiated");
+            LogInformation($"database initiated");
         }
 
         public void LogInformation(string message)
@@ -174,17 +174,6 @@ namespace Sir.Search
 
                                 debugger.Step(indexSession);
                             });
-                            //foreach (var document in payload)
-                            //{
-                            //    foreach (var node in document.Nodes)
-                            //    {
-                            //        indexSession.Put(node);
-                            //    }
-
-                            //    count++;
-
-                            //    debugger.Step(indexSession);
-                            //}
 
                             writeQueue.Enqueue(indexSession);
                         }

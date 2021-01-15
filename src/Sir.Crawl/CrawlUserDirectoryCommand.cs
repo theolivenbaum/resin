@@ -22,7 +22,8 @@ namespace Sir.Crawl
         public void Run(IDictionary<string, string> args, ILogger logger)
         {
             var dataDirectory = args["dataDirectory"];
-            var userDirectory = args["userDirectory"];
+            var rootUserDirectory = args["userDirectory"];
+            var maxNoRequestsPerSession = args.ContainsKey("maxNoRequestsPerSession") ? int.Parse(args["maxNoRequestsPerSession"]) : 10;
             var urlCollectionId = "url".ToHash();
             var htmlClient = new HtmlWeb();
 
@@ -34,11 +35,11 @@ namespace Sir.Crawl
 
             using (var database = new Database(logger))
             {
-                foreach (var directory in Directory.EnumerateDirectories(userDirectory))
+                foreach (var userDirectory in Directory.EnumerateDirectories(rootUserDirectory))
                 {
-                    var lastCrawlDateKeyId = database.GetKeyId(directory, urlCollectionId, urlCollectionId);
+                    var lastCrawlDateKeyId = database.GetKeyId(userDirectory, urlCollectionId, urlCollectionId);
 
-                    foreach (var url in Urls(directory, urlCollectionId, database))
+                    foreach (var url in Urls(userDirectory, urlCollectionId, database))
                     {
                         DateTime lastCrawlDate = DateTime.MinValue;
                         Uri uri = null;
@@ -64,12 +65,12 @@ namespace Sir.Crawl
                         {
                             var time = Stopwatch.StartNew();
                             var timeOfCrawl = DateTime.Now;
-                            var documents = DoCrawl(uri, htmlClient, siteWide, logger).ToList();
-
-                            logger.LogInformation($"crawling {documents.Count} resources from {uri.Host} took {time.Elapsed}.");
+                            var documents = DoCrawl(uri, htmlClient, siteWide, logger).Take(maxNoRequestsPerSession).ToList();
 
                             database.Write(dataDirectory, collectionId, documents, _model);
-                            database.Update(directory, urlCollectionId, url.Id, lastCrawlDateKeyId, timeOfCrawl);
+                            //database.Update(userDirectory, urlCollectionId, url.Id, lastCrawlDateKeyId, timeOfCrawl);
+
+                            logger.LogInformation($"requesting {documents.Count} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
                         }
                         catch (Exception ex)
                         {
@@ -104,7 +105,7 @@ namespace Sir.Crawl
                 }
             }
 
-            var text = sb.ToString();
+            var text = sb.ToString().Trim();
 
             yield return new Document(new Field[]
             {
@@ -143,11 +144,6 @@ namespace Sir.Crawl
                     {
                         if (linkUri.Host == uri.Host)
                         {
-                            if (!_history.Add(linkUri.ToString()))
-                            {
-                                continue;
-                            }
-
                             foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false, logger))
                             {
                                 yield return document;

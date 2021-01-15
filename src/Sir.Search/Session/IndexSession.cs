@@ -28,18 +28,14 @@ namespace Sir.Search
 
         public void Put(long docId, long keyId, IEnumerable<IVector> tokens)
         {
-            VectorNode column;
-
-            if (!_index.TryGetValue(keyId, out column))
-            {
-                column = new VectorNode();
-                _index.Add(keyId, column);
-            }
+            var tree = new VectorNode(keyId: keyId);
 
             foreach (var token in tokens)
             {
-                _indexingStrategy.ExecutePut<T>(column, new VectorNode(token, docId));
+                tree.AddIfUnique(new VectorNode(token, docId: docId, keyId: keyId), _model);
             }
+
+            Put(tree);
         }
 
         public void Put(VectorNode tree)
