@@ -13,15 +13,15 @@ using System.Threading.Tasks;
 namespace Sir.Search
 {
     /// <summary>
-    /// Multi-directory stream dispatcher with helper methods for writing, indexing, optimizing and truncating collection.
+    /// Multi-directory stream dispatcher with helper methods for writing, indexing, optimizing and truncating collections.
     /// </summary>
-    public class StreamFactory : IDisposable, IStreamFactory
+    public class Database : IDisposable, IDatabase
     {
         private IDictionary<ulong, IDictionary<ulong, long>> _keys;
         private ILogger _logger;
         private readonly object _syncKeys = new object();
 
-        public StreamFactory(ILogger logger = null)
+        public Database(ILogger logger = null)
         {
             _logger = logger;
             _keys = new Dictionary<ulong, IDictionary<ulong, long>>();
@@ -308,6 +308,23 @@ namespace Sir.Search
             }
         }
 
+        public void Store(string directory, ulong collectionId, IEnumerable<Document> job)
+        {
+            using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
+            {
+                foreach (var document in job)
+                    writeSession.Put(document);
+            }
+        }
+
+        public void Update(string directory, ulong collectionId, long documentId, long keyId, object value)
+        {
+            using (var updateSession = new UpdateSession(directory, collectionId, this))
+            {
+                updateSession.Update(documentId, keyId, value);
+            }
+        }
+
         public FileStream CreateLockFile(string directory, ulong collectionId)
         {
             return new FileStream(Path.Combine(directory, collectionId + ".lock"),
@@ -463,6 +480,34 @@ namespace Sir.Search
             }
 
             return new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        }
+
+        public Stream CreateSeekableWritableStream(string directory, ulong collectionId, long keyId, string fileExtension)
+        {
+            var fileName = Path.Combine(directory, $"{collectionId}.{keyId}.{fileExtension}");
+
+            if (!File.Exists(fileName))
+            {
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                }
+            }
+
+            return new FileStream(fileName, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
+        }
+
+        public Stream CreateSeekableWritableStream(string directory, ulong collectionId, string fileExtension)
+        {
+            var fileName = Path.Combine(directory, $"{collectionId}.{fileExtension}");
+
+            if (!File.Exists(fileName))
+            {
+                using (var fs = new FileStream(fileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                }
+            }
+
+            return new FileStream(fileName, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
         }
 
         public bool CollectionExists(string directory, ulong collectionId)

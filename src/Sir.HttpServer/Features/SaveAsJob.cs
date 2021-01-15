@@ -9,7 +9,7 @@ namespace Sir.HttpServer.Features
 {
     public class SaveAsJob<T> : BaseJob
     {
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IModel<T> _model;
@@ -23,7 +23,7 @@ namespace Sir.HttpServer.Features
 
         public SaveAsJob(
             string directory,
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             QueryParser<string> queryParser,
             IModel<T> model,
             ILogger logger,

@@ -8,10 +8,10 @@ namespace Sir.Search
         private readonly DocumentReader _reader;
         private readonly DocumentWriter _writer;
 
-        public UpdateSession(string directory, ulong collectionId, StreamFactory sessionFactory) 
+        public UpdateSession(string directory, ulong collectionId, Database sessionFactory) 
         {
             _reader = new DocumentReader(directory, collectionId, sessionFactory);
-            _writer = new DocumentWriter(directory, collectionId, sessionFactory);
+            _writer = new DocumentWriter(directory, collectionId, sessionFactory, append:false);
         }
 
         public void Update(long docId, long keyId, object value)

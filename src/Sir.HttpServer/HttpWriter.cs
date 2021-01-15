@@ -13,10 +13,10 @@ namespace Sir.HttpServer
     /// </summary>
     public class HttpWriter : IHttpWriter
     {
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly IConfigurationProvider _config;
 
-        public HttpWriter(StreamFactory sessionFactory, IConfigurationProvider config)
+        public HttpWriter(Database sessionFactory, IConfigurationProvider config)
         {
             _sessionFactory = sessionFactory;
             _config = config;

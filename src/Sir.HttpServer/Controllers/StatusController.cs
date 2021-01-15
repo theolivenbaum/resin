@@ -15,7 +15,7 @@ namespace Sir.HttpServer.Controllers
 
         public StatusController(
             IConfigurationProvider config,
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             IModel<string> model,
             QueryParser<string> queryParser,
             JobQueue queue) : base(config, sessionFactory)

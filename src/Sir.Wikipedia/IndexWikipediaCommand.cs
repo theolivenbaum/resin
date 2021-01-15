@@ -36,7 +36,7 @@ namespace Sir.Wikipedia
             var model = new BagOfCharsModel();
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
 
-            using (var sessionFactory = new StreamFactory(logger))
+            using (var sessionFactory = new Database(logger))
             {
                 var debugger = new IndexDebugger(logger, sampleSize);
 

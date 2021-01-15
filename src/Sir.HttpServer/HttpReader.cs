@@ -17,14 +17,14 @@ namespace Sir.HttpServer
     public class HttpReader : IHttpReader
     {
         private readonly ILogger<HttpReader> _logger;
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly HttpQueryParser _httpQueryParser;
         private readonly IConfigurationProvider _config;
         private readonly string[] _fields;
         private readonly string[] _select;
 
         public HttpReader(
-            StreamFactory sessionFactory, 
+            Database sessionFactory, 
             HttpQueryParser httpQueryParser,
             IConfigurationProvider config,
             ILogger<HttpReader> logger)

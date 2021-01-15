@@ -32,7 +32,7 @@ namespace Sir.Wikipedia
 
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
 
-            using (var sessionFactory = new StreamFactory(logger))
+            using (var sessionFactory = new Database(logger))
             {
                 sessionFactory.Truncate(dataDirectory, collectionId);
 

@@ -18,7 +18,7 @@ namespace Sir.HttpServer.Controllers
 
         public CrawlController(
             IConfigurationProvider config,
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             IModel<string> model,
             QueryParser<string> queryParser,
             JobQueue queue,
@@ -73,7 +73,7 @@ namespace Sir.HttpServer.Controllers
 
             _queue.Enqueue(new CrawlJob(
                 _config.Get("data_dir"),
-                StreamFactory,
+                Database,
                 _queryParser,
                 _model,
                 _log,

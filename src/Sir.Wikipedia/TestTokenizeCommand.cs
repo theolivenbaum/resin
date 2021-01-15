@@ -28,7 +28,7 @@ namespace Sir.Wikipedia
             var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
             var debugger = new BatchDebugger(logger, sampleSize);
 
-            using (var sessionFactory = new StreamFactory(logger))
+            using (var sessionFactory = new Database(logger))
             {
                 using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, sessionFactory)))
                 {

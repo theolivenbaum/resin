@@ -11,7 +11,7 @@ namespace Sir.Tests
 {
     public class IndexSessionTests
     {
-        private StreamFactory _sessionFactory;
+        private Database _sessionFactory;
         private string _directory = @"c:\temp\sir_tests";
 
         private readonly string[] _data = new string[] { "apple", "apples", "apricote", "apricots", "avocado", "avocados", "banana", "bananas", "blueberry", "blueberries", "cantalope" };
@@ -192,7 +192,7 @@ namespace Sir.Tests
                     .AddDebug();
             });
 
-            _sessionFactory = new StreamFactory(loggerFactory.CreateLogger<StreamFactory>());
+            _sessionFactory = new Database(loggerFactory.CreateLogger<Database>());
         }
 
         [TearDown]

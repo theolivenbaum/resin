@@ -19,14 +19,14 @@ namespace Sir.Documents
 
         public ulong CollectionId { get; }
 
-        public DocumentReader(string directory, ulong collectionId, IStreamFactory sessionFactory)
+        public DocumentReader(string directory, ulong collectionId, IDatabase database)
         {
-            var valueStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.val", collectionId)));
-            var keyStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.key", collectionId)));
-            var docStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.docs", collectionId)));
-            var valueIndexStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.vix", collectionId)));
-            var keyIndexStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.kix", collectionId)));
-            var docIndexStream = sessionFactory.CreateReadStream(Path.Combine(directory, string.Format("{0}.dix", collectionId)));
+            var valueStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.val", collectionId)));
+            var keyStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.key", collectionId)));
+            var docStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.docs", collectionId)));
+            var valueIndexStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.vix", collectionId)));
+            var keyIndexStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.kix", collectionId)));
+            var docIndexStream = database.CreateReadStream(Path.Combine(directory, string.Format("{0}.dix", collectionId)));
 
             _vals = new ValueReader(valueStream);
             _keys = new ValueReader(keyStream);

@@ -5,6 +5,7 @@ using Sir.Search;
 using Sir.VectorSpace;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,10 +26,13 @@ namespace Sir.Crawl
             var urlCollectionId = "url".ToHash();
             var htmlClient = new HtmlWeb();
 
-            //htmlClient.UserAgent = "Crawlcrawler (+https://crawlcrawler.com)";
+            htmlClient.UserAgent = "Crawlcrawler (+https://crawlcrawler.com)";
+
+#if DEBUG
             htmlClient.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36";
-            
-            using (var database = new StreamFactory(logger))
+#endif
+
+            using (var database = new Database(logger))
             {
                 foreach (var directory in Directory.EnumerateDirectories(userDirectory))
                 {
@@ -58,19 +62,14 @@ namespace Sir.Crawl
 
                         try
                         {
+                            var time = Stopwatch.StartNew();
                             var timeOfCrawl = DateTime.Now;
-                            var documents = DoCrawl(uri, htmlClient, siteWide);
+                            var documents = DoCrawl(uri, htmlClient, siteWide, logger).ToList();
 
-                            using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, database)))
-                            using (var indexSession = new IndexSession<string>(_model, _model))
-                            {
-                                database.Write(dataDirectory, collectionId, documents, _model);
-                            }
+                            logger.LogInformation($"crawling {documents.Count} resources from {uri.Host} took {time.Elapsed}.");
 
-                            using (var updateSession = new UpdateSession(directory, urlCollectionId, database))
-                            {
-                                updateSession.Update(url.Id, lastCrawlDateKeyId, timeOfCrawl);
-                            }
+                            database.Write(dataDirectory, collectionId, documents, _model);
+                            database.Update(directory, urlCollectionId, url.Id, lastCrawlDateKeyId, timeOfCrawl);
                         }
                         catch (Exception ex)
                         {
@@ -81,7 +80,7 @@ namespace Sir.Crawl
             }
         }
 
-        private IEnumerable<Document> DoCrawl(Uri uri, HtmlWeb htmlClient, bool siteWide)
+        private IEnumerable<Document> DoCrawl(Uri uri, HtmlWeb htmlClient, bool siteWide, ILogger logger)
         {
             if (!_history.Add(uri.ToString()))
             {
@@ -91,6 +90,8 @@ namespace Sir.Crawl
             var doc = htmlClient.Load(uri);
             var title = doc.DocumentNode.Descendants("title").FirstOrDefault().InnerText;
             var sb = new StringBuilder();
+
+            logger.LogInformation($"crawled {uri}");
 
             foreach (var node in doc.DocumentNode.DescendantsAndSelf())
             {
@@ -109,8 +110,7 @@ namespace Sir.Crawl
             {
                 new Field("title", title),
                 new Field("text", text.ToString()),
-                new Field("url", uri.ToString()),
-                new Field("host", uri.Host)
+                new Field("url", uri.ToString())
             });
 
             if (siteWide)
@@ -148,7 +148,7 @@ namespace Sir.Crawl
                                 continue;
                             }
 
-                            foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false))
+                            foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false, logger))
                             {
                                 yield return document;
 
@@ -160,7 +160,7 @@ namespace Sir.Crawl
             }
         }
 
-        private IEnumerable<Document> Urls(string directory, ulong collectionId, StreamFactory streamFactory)
+        private IEnumerable<Document> Urls(string directory, ulong collectionId, Database streamFactory)
         {
             using (var reader = new DocumentStreamSession(directory, streamFactory))
             {

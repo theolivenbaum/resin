@@ -35,7 +35,7 @@ namespace Sir.CommonCrawl
                 "title","description", "url"
             };
 
-            using (var database = new StreamFactory(logger))
+            using (var database = new Database(logger))
             using (var writeSession = new WriteSession(new DocumentWriter(dataDirectory, collectionId, database)))
             using (var indexSession = new IndexSession<string>(model, model))
             {

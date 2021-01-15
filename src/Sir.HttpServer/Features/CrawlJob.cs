@@ -16,7 +16,7 @@ namespace Sir.HttpServer.Features
     public class CrawlJob : AsyncJob
     {
         private readonly string _directory;
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly QueryParser<string> _queryParser;
         private readonly ILogger _logger;
         private readonly IModel<string> _model;
@@ -25,7 +25,7 @@ namespace Sir.HttpServer.Features
 
         public CrawlJob(
             string directory,
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             QueryParser<string> queryParser,
             IModel<string> model,
             ILogger logger,

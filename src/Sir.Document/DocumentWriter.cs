@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Sir.Documents
 {
     /// <summary>
-    /// Write documents to storage.
+    /// Write documents to a database.
     /// </summary>
     public class DocumentWriter : IDisposable
     {
@@ -16,18 +16,18 @@ namespace Sir.Documents
         private readonly ValueIndexWriter _keyIx;
         private readonly DocIndexWriter _docIx;
         private readonly ulong _collectionId;
-        private readonly IStreamFactory _sessionFactory;
+        private readonly IDatabase _database;
         private readonly string _directory;
         private readonly object _keyLock = new object();
         
-        public DocumentWriter(string directory, ulong collectionId, IStreamFactory sessionFactory)
+        public DocumentWriter(string directory, ulong collectionId, IDatabase database, bool append = true)
         {
-            var valueStream = sessionFactory.CreateAppendStream(directory, collectionId, "val");
-            var keyStream = sessionFactory.CreateAppendStream(directory, collectionId, "key");
-            var docStream = sessionFactory.CreateAppendStream(directory, collectionId, "docs");
-            var valueIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "vix");
-            var keyIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "kix");
-            var docIndexStream = sessionFactory.CreateAppendStream(directory, collectionId, "dix");
+            var valueStream = append ? database.CreateAppendStream(directory, collectionId, "val") : database.CreateSeekableWritableStream(directory, collectionId, "val");
+            var keyStream = database.CreateAppendStream(directory, collectionId, "key");
+            var docStream = database.CreateAppendStream(directory, collectionId, "docs");
+            var valueIndexStream = database.CreateAppendStream(directory, collectionId, "vix");
+            var keyIndexStream = database.CreateAppendStream(directory, collectionId, "kix");
+            var docIndexStream = database.CreateAppendStream(directory, collectionId, "dix");
 
             _vals = new ValueWriter(valueStream);
             _keys = new ValueWriter(keyStream);
@@ -36,7 +36,7 @@ namespace Sir.Documents
             _keyIx = new ValueIndexWriter(keyIndexStream);
             _docIx = new DocIndexWriter(docIndexStream);
             _collectionId = collectionId;
-            _sessionFactory = sessionFactory;
+            _database = database;
             _directory = directory;
         }
 
@@ -45,11 +45,11 @@ namespace Sir.Documents
             var keyHash = keyStr.ToHash();
             long keyId;
 
-            if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
+            if (!_database.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
             {
                 lock (_keyLock)
                 {
-                    if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
+                    if (!_database.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
                     {
                         // We have a new key!
 
@@ -59,7 +59,7 @@ namespace Sir.Documents
                         keyId = PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
 
                         // store key mapping
-                        _sessionFactory.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
+                        _database.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
                     }
                 }
             }
@@ -72,7 +72,7 @@ namespace Sir.Documents
             var keyHash = keyStr.ToHash();
             long keyId;
 
-            if (!_sessionFactory.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
+            if (!_database.TryGetKeyId(_directory, _collectionId, keyHash, out keyId))
             {
                 // We have a new key!
 
@@ -82,7 +82,7 @@ namespace Sir.Documents
                 keyId = PutKeyInfo(keyInfo.offset, keyInfo.len, keyInfo.dataType);
 
                 // store key mapping
-                _sessionFactory.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
+                _database.RegisterKeyMapping(_directory, _collectionId, keyHash, keyId);
             }
 
             return keyId;

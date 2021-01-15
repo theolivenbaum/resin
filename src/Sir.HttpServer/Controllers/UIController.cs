@@ -6,16 +6,15 @@ namespace Sir.HttpServer.Controllers
 {
     public abstract class UIController : Controller
     {
-        private readonly StreamFactory _sessionFactory;
         private IConfigurationProvider config;
 
         protected IConfigurationProvider Config { get; }
-        protected StreamFactory StreamFactory => _sessionFactory;
+        protected Database Database { get; }
 
-        public UIController(IConfigurationProvider config, StreamFactory sessionFactory)
+        public UIController(IConfigurationProvider config, Database database)
         {
             Config = config;
-            _sessionFactory = sessionFactory;
+            Database = database;
         }
 
         protected UIController(IConfigurationProvider config)

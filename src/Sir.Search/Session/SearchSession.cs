@@ -13,13 +13,13 @@ namespace Sir.Search
     /// </summary>
     public class SearchSession : DocumentStreamSession, IDisposable, ISearchSession
     {
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly IModel _model;
         private readonly ILogger _logger;
 
         public SearchSession(
             string directory, 
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             IModel model,
             ILogger logger = null) : base(directory, sessionFactory)
         {
@@ -136,7 +136,9 @@ namespace Sir.Search
             foreach (var d in docIds)
             {
                 var doc = ReadDocument(d.Key, select, d.Value * scoreMultiplier);
-                result.Add(doc);
+
+                if (doc != null)
+                    result.Add(doc);
             }
 
             _logger.LogDebug($"reading documents took {timer.Elapsed}");

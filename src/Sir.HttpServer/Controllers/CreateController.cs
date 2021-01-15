@@ -9,7 +9,7 @@ namespace Sir.HttpServer.Controllers
 {
     public class CreateController : UIController
     {
-        public CreateController(IConfigurationProvider config, StreamFactory sessionFactory) : base(config, sessionFactory)
+        public CreateController(IConfigurationProvider config, Database database) : base(config, database)
         {
         }
 
@@ -99,7 +99,6 @@ namespace Sir.HttpServer.Controllers
                 Directory.CreateDirectory(userDirectory);
             }
 
-            var model = new BagOfCharsModel();
             var collectionId = "url".ToHash();
             var documents = new List<Document>();
 
@@ -132,11 +131,10 @@ namespace Sir.HttpServer.Controllers
                 }));
             }
 
-            StreamFactory.Write(
+            Database.Store(
                 userDirectory,
                 collectionId,
-                documents,
-                model);
+                documents);
 
             return RedirectToAction("Index", "Search", new { queryId });
         }

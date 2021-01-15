@@ -18,7 +18,7 @@ namespace Sir.HttpServer.Controllers
 
         public SaveAsController(
             IConfigurationProvider config,
-            StreamFactory sessionFactory,
+            Database sessionFactory,
             IModel<string> model,
             QueryParser<string> queryParser,
             SaveAsJobQueue queue,
@@ -76,7 +76,7 @@ namespace Sir.HttpServer.Controllers
             new SaveAsJob<string>
                 (
                     _config.Get("data_dir"),
-                    sessionFactory: StreamFactory,
+                    sessionFactory: Database,
                     queryParser: _queryParser,
                     model: _model,
                     logger: _log,

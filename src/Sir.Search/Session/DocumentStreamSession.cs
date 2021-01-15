@@ -2,16 +2,17 @@
 using Sir.VectorSpace;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Sir.Search
 {
     public class DocumentStreamSession : IDisposable
     {
         private readonly string _directory;
-        protected readonly StreamFactory SessionFactory;
+        protected readonly Database SessionFactory;
         private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
-        public DocumentStreamSession(string directory, StreamFactory sessionFactory) 
+        public DocumentStreamSession(string directory, Database sessionFactory) 
         {
             _directory = directory;
             SessionFactory = sessionFactory;
@@ -21,7 +22,8 @@ namespace Sir.Search
 
         public int Count(ulong collectionId)
         {
-            return GetOrCreateDocumentReader(collectionId).DocumentCount();
+            var reader = GetOrCreateDocumentReader(collectionId);
+            return reader == null ? 0 : reader.DocumentCount();
         }
 
         public IEnumerable<Document> ReadDocuments(
@@ -31,6 +33,10 @@ namespace Sir.Search
             int take = 0)
         {
             var documentReader = GetOrCreateDocumentReader(collectionId);
+
+            if (documentReader == null)
+                yield break;
+
             var docCount = documentReader.DocumentCount();
 
             if (take == 0)
@@ -53,6 +59,10 @@ namespace Sir.Search
             int take = 0)
         {
             var documentReader = GetOrCreateDocumentReader(collectionId);
+
+            if (documentReader == null)
+                yield break;
+
             var docCount = documentReader.DocumentCount();
 
             if (take == 0)
@@ -83,6 +93,10 @@ namespace Sir.Search
             int take = 0)
         {
             var documentReader = GetOrCreateDocumentReader(collectionId);
+
+            if (documentReader == null)
+                yield break;
+
             var docCount = documentReader.DocumentCount();
 
             if (take == 0)
@@ -186,9 +200,12 @@ namespace Sir.Search
             HashSet<string> select,
             double? score = null)
         {
-            var streamReader = GetOrCreateDocumentReader(docId.collectionId);
+            var reader = GetOrCreateDocumentReader(docId.collectionId);
 
-            return ReadDocument(docId, select, streamReader, score);
+            if (reader == null)
+                return null;
+
+            return ReadDocument(docId, select, reader, score);
         }
 
         public Document ReadDocument(
@@ -221,6 +238,9 @@ namespace Sir.Search
 
         private DocumentReader GetOrCreateDocumentReader(ulong collectionId)
         {
+            if (!File.Exists(Path.Combine(_directory, string.Format("{0}.val", collectionId))))
+                return null;
+
             DocumentReader reader;
 
             if (!_streamReaders.TryGetValue(collectionId, out reader))

@@ -9,11 +9,11 @@ namespace Sir.Search
 {
     public class StringQueryFormatter : IQueryFormatter<string>
     {
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly ILogger _log;
         private readonly string _directory;
 
-        public StringQueryFormatter(string directory, StreamFactory sessionFactory, ILogger log)
+        public StringQueryFormatter(string directory, Database sessionFactory, ILogger log)
         {
             _sessionFactory = sessionFactory;
             _log = log;

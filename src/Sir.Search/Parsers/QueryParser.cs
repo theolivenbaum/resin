@@ -7,12 +7,12 @@ namespace Sir.Search
 {
     public class QueryParser<T>
     {
-        private readonly StreamFactory _sessionFactory;
+        private readonly Database _sessionFactory;
         private readonly IModel<T> _model;
         private readonly ILogger _log;
         private readonly string _directory;
 
-        public QueryParser(string directory, StreamFactory sessionFactory, IModel<T> model, ILogger log = null)
+        public QueryParser(string directory, Database sessionFactory, IModel<T> model, ILogger log = null)
         {
             _sessionFactory = sessionFactory;
             _model = model;
