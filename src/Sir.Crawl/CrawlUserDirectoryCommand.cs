@@ -15,7 +15,7 @@ namespace Sir.Crawl
     public class CrawlUserDirectoryCommand : ICommand
     {
         private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "verified" };
-        private readonly HashSet<string> _history = new HashSet<string>();
+        private readonly HashSet<string> _sessionHistory = new HashSet<string>();
         private readonly IModel<string> _model = new BagOfCharsModel();
 
         public void Run(IDictionary<string, string> args, ILogger logger)
@@ -59,9 +59,15 @@ namespace Sir.Crawl
                             continue;
 
                         var collectionId = uri.Host.ToHash();
+
+                        if (database.Exists(dataDirectory, uri.Host, "url", uri.ToString(), _model))
+                        {
+                            continue;
+                        }
+
                         var siteWide = scope == "site";
 
-                        if (_history.Add(uri.ToString()))
+                        if (_sessionHistory.Add(uri.ToString()))
                         {
                             try
                             {

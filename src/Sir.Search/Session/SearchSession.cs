@@ -44,6 +44,22 @@ namespace Sir.Search
             return new SearchResult(query, 0, 0, new Document[0]);
         }
 
+        public Document SearchScalar(Query query)
+        {
+            var result = ScanResolveReduceSort(query, 0, 1);
+
+            if (result != null)
+            {
+                var numOfTerms = query.TotalNumberOfTerms();
+                var scoreMultiplier = (double)1 / numOfTerms;
+                var docs = ReadDocs(result.SortedDocuments, query.Select, scoreMultiplier);
+
+                return docs.Count > 0 ? docs[0] : null;
+            }
+
+            return null;
+        }
+
         private ScoredResult ScanResolveReduceSort(Query query, int skip, int take)
         {
             var timer = Stopwatch.StartNew();

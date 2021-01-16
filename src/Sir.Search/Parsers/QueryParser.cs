@@ -9,14 +9,14 @@ namespace Sir.Search
     {
         private readonly Database _sessionFactory;
         private readonly IModel<T> _model;
-        private readonly ILogger _log;
+        private readonly ILogger _logger;
         private readonly string _directory;
 
-        public QueryParser(string directory, Database sessionFactory, IModel<T> model, ILogger log = null)
+        public QueryParser(string directory, Database sessionFactory, IModel<T> model, ILogger logger = null)
         {
             _sessionFactory = sessionFactory;
             _model = model;
-            _log = log;
+            _logger = logger;
             _directory = directory;
         }
 
@@ -106,10 +106,10 @@ namespace Sir.Search
                 cursor = query;
             }
 
-            if (_log != null)
+            if (_logger != null)
             {
                 var queryLog = JsonConvert.SerializeObject(root);
-                _log.LogDebug($"incoming query: {queryLog}");
+                _logger.LogDebug($"incoming query: {queryLog}");
             }
 
             return Parse(root, select);
