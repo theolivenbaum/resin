@@ -208,10 +208,10 @@ namespace Sir.Search
             IModel<T> model,
             int reportSize = 1000)
         {
-            Write(targetDirectory, targetCollectionId, documents, model, reportSize);
+            StoreIndexAndWrite(targetDirectory, targetCollectionId, documents, model, reportSize);
         }
 
-        public void Put<T>(IEnumerable<Document> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
+        public void StoreAndIndex<T>(IEnumerable<Document> job, WriteSession writeSession, IndexSession<T> indexSession, int reportSize = 1000)
         {
             var debugger = new IndexDebugger(_logger, reportSize);
 
@@ -231,7 +231,7 @@ namespace Sir.Search
             }
         }
 
-        public void Put<T>(
+        public void StoreAndIndex<T>(
             Document document, 
             WriteSession writeSession, 
             IndexSession<T> indexSession)
@@ -247,7 +247,7 @@ namespace Sir.Search
             }
         }
 
-        public void Index<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
+        public void IndexAndWrite<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
             using (var indexSession = new IndexSession<T>(model, model))
             {
@@ -294,12 +294,26 @@ namespace Sir.Search
             LogInformation($"processed indexing job (collection {collectionId}) in {time.Elapsed}");
         }
 
-        public void Write<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
+        public void StoreIndexAndWrite<T>(string directory, ulong collectionId, IEnumerable<Document> job, IModel<T> model, int reportSize = 1000)
         {
             using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
             using (var indexSession = new IndexSession<T>(model, model))
             {
-                Put(job, writeSession, indexSession, reportSize);
+                StoreAndIndex(job, writeSession, indexSession, reportSize);
+
+                using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
+                {
+                    stream.Write(indexSession.GetInMemoryIndex());
+                }
+            }
+        }
+
+        public void StoreIndexAndWrite<T>(string directory, ulong collectionId, Document document, IModel<T> model)
+        {
+            using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
+            using (var indexSession = new IndexSession<T>(model, model))
+            {
+                StoreAndIndex(document, writeSession, indexSession);
 
                 using (var stream = new WritableIndexStream(directory, collectionId, this, logger: _logger))
                 {
@@ -317,7 +331,7 @@ namespace Sir.Search
             }
         }
 
-        public void Update(string directory, ulong collectionId, long documentId, long keyId, object value)
+        public void UpdateDocumentField(string directory, ulong collectionId, long documentId, long keyId, object value)
         {
             using (var updateSession = new UpdateSession(directory, collectionId, this))
             {
@@ -508,19 +522,6 @@ namespace Sir.Search
             }
 
             return new FileStream(fileName, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
-        }
-
-        public bool CollectionExists(string directory, ulong collectionId)
-        {
-            return File.Exists(Path.Combine(directory, collectionId + ".vec"));
-        }
-
-        public bool CollectionIsIndexOnly(string directory, ulong collectionId)
-        {
-            if (!CollectionExists(directory, collectionId))
-                throw new InvalidOperationException($"{collectionId} dows not exist");
-
-            return !File.Exists(Path.Combine(directory, collectionId + ".docs"));
         }
 
         public void Dispose()

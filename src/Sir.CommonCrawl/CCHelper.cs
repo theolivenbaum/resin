@@ -41,7 +41,7 @@ namespace Sir.CommonCrawl
             {
                 using (var queue = new ProducerConsumerQueue<Document>(document =>
                 {
-                    database.Put(document, writeSession, indexSession);
+                    database.StoreAndIndex(document, writeSession, indexSession);
                 }))
                 {
                     foreach (var document in ReadWatFile(fileName, refFileName).Select(dic =>

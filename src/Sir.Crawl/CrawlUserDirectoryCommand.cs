@@ -23,6 +23,7 @@ namespace Sir.Crawl
             var dataDirectory = args["dataDirectory"];
             var rootUserDirectory = args["userDirectory"];
             var maxNoRequestsPerSession = args.ContainsKey("maxNoRequestsPerSession") ? int.Parse(args["maxNoRequestsPerSession"]) : 10;
+            var minIdleTime = args.ContainsKey("minIdleTime") ? int.Parse(args["minIdleTime"]) : 1000;
             var urlCollectionId = "url".ToHash();
             var htmlClient = new HtmlWeb();
 
@@ -60,98 +61,128 @@ namespace Sir.Crawl
                         var collectionId = uri.Host.ToHash();
                         var siteWide = scope == "site";
 
-                        try
+                        if (_history.Add(uri.ToString()))
                         {
-                            var time = Stopwatch.StartNew();
-                            var documents = DoCrawl(uri, htmlClient, siteWide, logger).Take(maxNoRequestsPerSession).ToList();
+                            try
+                            {
+                                var time = Stopwatch.StartNew();
+                                var idleTime = Stopwatch.StartNew();
+                                var result = Crawl(uri, htmlClient, siteWide, logger);
 
-                            database.Write(dataDirectory, collectionId, documents, _model);
-                            database.Update(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
+                                if (result != null)
+                                {
+                                    database.StoreIndexAndWrite(dataDirectory, collectionId, result.Document, _model);
+                                    database.UpdateDocumentField(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
 
-                            logger.LogInformation($"requesting {documents.Count} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "Crawl error");
+                                    foreach (var link in result.Links.Take(maxNoRequestsPerSession))
+                                    {
+                                        while (idleTime.ElapsedMilliseconds < minIdleTime)
+                                        {
+                                            logger.LogInformation($"crawl sleeps");
+
+                                            Thread.Sleep(100);
+                                        }
+
+                                        idleTime.Restart();
+
+                                        var r = Crawl(link, htmlClient, siteWide: false, logger);
+
+                                        database.StoreIndexAndWrite(dataDirectory, collectionId, r.Document, _model);
+                                    }
+
+                                    logger.LogInformation($"requesting {result.Links.Count + 1} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogError(ex, "Crawl error");
+                            }
                         }
                     }
                 }
             }
         }
 
-        private IEnumerable<Document> DoCrawl(Uri uri, HtmlWeb htmlClient, bool siteWide, ILogger logger)
+        private class CrawlResult
         {
-            if (!_history.Add(uri.ToString()))
+            public Document Document { get; set; }
+            public IList<Uri> Links { get; set; }
+        }
+
+        private CrawlResult Crawl(Uri uri, HtmlWeb htmlClient, bool siteWide, ILogger logger)
+        {
+            try
             {
-                yield break;
-            }
+                var doc = htmlClient.Load(uri);
+                var title = doc.DocumentNode.Descendants("title").FirstOrDefault().InnerText;
+                var sb = new StringBuilder();
 
-            var doc = htmlClient.Load(uri);
-            var title = doc.DocumentNode.Descendants("title").FirstOrDefault().InnerText;
-            var sb = new StringBuilder();
+                logger.LogInformation($"requested {uri}");
 
-            logger.LogInformation($"crawled {uri}");
-
-            foreach (var node in doc.DocumentNode.DescendantsAndSelf())
-            {
-                if (!node.HasChildNodes && node.ParentNode.Name != "script" && node.ParentNode.Name != "style")
+                foreach (var node in doc.DocumentNode.DescendantsAndSelf())
                 {
-                    string innerText = node.InnerText;
+                    if (!node.HasChildNodes && node.ParentNode.Name != "script" && node.ParentNode.Name != "style")
+                    {
+                        string innerText = node.InnerText;
 
-                    if (!string.IsNullOrEmpty(innerText))
-                        sb.AppendLine(innerText.Trim());
+                        if (!string.IsNullOrEmpty(innerText))
+                            sb.AppendLine(innerText.Trim());
+                    }
                 }
-            }
 
-            var text = sb.ToString().Trim();
+                var text = sb.ToString().Trim();
 
-            yield return new Document(new Field[]
-            {
+                var document = new Document(new Field[]
+                {
                 new Field("title", title),
                 new Field("text", text.ToString()),
                 new Field("url", uri.ToString()),
                 new Field("last_crawl_date", DateTime.Now)
-            });
+                });
 
-            if (siteWide)
-            {
-                var root = $"{uri.Scheme}://{uri.Host}{uri.PathAndQuery}";
+                var links = new List<Uri>();
 
-                foreach (HtmlNode link in doc.DocumentNode.SelectNodes("//a[@href]"))
+                if (siteWide)
                 {
-                    var href = link.Attributes["href"].Value;
-                    Uri linkUri = null;
+                    var root = $"{uri.Scheme}://{uri.Host}{uri.PathAndQuery}";
 
-                    try
+                    foreach (HtmlNode link in doc.DocumentNode.SelectNodes("//a[@href]"))
                     {
-                        if (href.StartsWith('/'))
-                        {
-                            linkUri = new Uri($"{root}{href.Substring(1)}");
-                        }
-                        else if (href.StartsWith("http"))
-                        {
-                            linkUri = new Uri(href);
-                        }
-                        else if (href.Contains('/'))
-                        {
-                            linkUri = new Uri($"{root}{uri.PathAndQuery}{href}");
-                        }
-                    }
-                    catch { }
+                        var href = link.Attributes["href"].Value;
+                        Uri linkUri = null;
 
-                    if (linkUri != null)
-                    {
-                        if (linkUri.Host == uri.Host)
+                        try
                         {
-                            foreach (var document in DoCrawl(linkUri, htmlClient, siteWide: false, logger))
+                            if (href.StartsWith('/'))
                             {
-                                yield return document;
+                                linkUri = new Uri($"{root}{href.Substring(1)}");
+                            }
+                            else if (href.StartsWith("http"))
+                            {
+                                linkUri = new Uri(href);
+                            }
+                            else if (href.Contains('/'))
+                            {
+                                linkUri = new Uri($"{root}{uri.PathAndQuery}{href}");
+                            }
+                        }
+                        catch { }
 
-                                Thread.Sleep(1000);
+                        if (linkUri != null)
+                        {
+                            if (linkUri.Host == uri.Host)
+                            {
+                                links.Add(linkUri);
                             }
                         }
                     }
                 }
+
+                return new CrawlResult { Document = document, Links = links };
+            }
+            catch 
+            {
+                return null;
             }
         }
     }
