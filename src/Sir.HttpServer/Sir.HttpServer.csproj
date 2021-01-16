@@ -53,7 +53,6 @@
   <ItemGroup>
     <Folder Include="AppData\" />
     <Folder Include="Properties\PublishProfiles\" />
-    <Folder Include="Views\Crawl\" />
   </ItemGroup>
 
   <ItemGroup>

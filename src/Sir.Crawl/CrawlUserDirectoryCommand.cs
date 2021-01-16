@@ -154,16 +154,5 @@ namespace Sir.Crawl
                 }
             }
         }
-
-        private IEnumerable<Document> Urls(string directory, ulong collectionId, Database streamFactory)
-        {
-            using (var reader = new DocumentStreamSession(directory, streamFactory))
-            {
-                foreach (var document in reader.ReadDocuments(collectionId, _select))
-                {
-                    yield return document;
-                }
-            }
-        }
     }
 }
