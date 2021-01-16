@@ -14,18 +14,6 @@ namespace Sir.Search
         public double Score { get; set; }
         public IList<Field> Fields { get; set; }
 
-        public IEnumerable<Field> IndexableFields
-        {
-            get
-            {
-                foreach (var field in Fields)
-                {
-                    if (field.Index && field.Value != null)
-                        yield return field;
-                }
-            }
-        }
-
         /// <summary>
         /// Empty ctor used for over-the-wire serialization.
         /// </summary>

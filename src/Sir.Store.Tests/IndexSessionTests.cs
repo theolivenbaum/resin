@@ -79,7 +79,7 @@ namespace Sir.Tests
 
                     using (var indexSession = new IndexSession<string>(model, model))
                     {
-                        var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
+                        var doc = new Document(new Field[] { new Field(fieldName, data) });
                         
                         writeSession.Put(doc);
                         indexSession.Put(doc.Id, keyId, data);
@@ -135,7 +135,7 @@ namespace Sir.Tests
                 for (long i = 0; i < _data.Length; i++)
                 {
                     var data = _data[i];
-                    var doc = new Document(new Field[] { new Field(fieldName, data, index: true, store: true) });
+                    var doc = new Document(new Field[] { new Field(fieldName, data) });
 
                     writeSession.Put(doc);
                     indexSession.Put(doc.Id, keyId, data);

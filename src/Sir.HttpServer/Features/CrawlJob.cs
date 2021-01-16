@@ -252,9 +252,9 @@ namespace Sir.HttpServer.Features
                             (
                                 new List<Field>
                                 {
-                                    new Field("url", url, index:false, store:true),
-                                    new Field("text", content.ToString(), index:true, store:true),
-                                    new Field("filename", warcId, index:false, store:true)
+                                    new Field("url", url),
+                                    new Field("text", content.ToString()),
+                                    new Field("filename", warcId)
                                 }
                             );
 

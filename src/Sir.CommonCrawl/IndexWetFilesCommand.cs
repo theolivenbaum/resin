@@ -31,9 +31,7 @@ namespace Sir.CommonCrawl
                                     new Document(
                                         dic.Select(kvp => new Field(
                                             kvp.Key,
-                                            kvp.Value,
-                                            index: indexFields.Contains(kvp.Key),
-                                            store: storeFields.Contains(kvp.Key))).ToList())),
+                                            kvp.Value)).ToList())),
                     model,
                     reportSize: 1000);
             }

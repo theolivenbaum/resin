@@ -9,13 +9,13 @@ namespace Sir.Search
     public class DocumentStreamSession : IDisposable
     {
         private readonly string _directory;
-        protected readonly Database SessionFactory;
+        protected readonly Database Database;
         private readonly IDictionary<ulong, DocumentReader> _streamReaders;
 
-        public DocumentStreamSession(string directory, Database sessionFactory) 
+        public DocumentStreamSession(string directory, Database database) 
         {
             _directory = directory;
-            SessionFactory = sessionFactory;
+            Database = database;
             _streamReaders = new Dictionary<ulong, DocumentReader>();
         }
 
@@ -245,7 +245,7 @@ namespace Sir.Search
 
             if (!_streamReaders.TryGetValue(collectionId, out reader))
             {
-                reader = new DocumentReader(_directory, collectionId, SessionFactory);
+                reader = new DocumentReader(_directory, collectionId, Database);
                 _streamReaders.Add(collectionId, reader);
             }
 

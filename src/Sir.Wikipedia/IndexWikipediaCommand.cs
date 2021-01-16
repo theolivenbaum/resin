@@ -27,14 +27,14 @@ namespace Sir.Wikipedia
             var pageSize = args.ContainsKey("pageSize") ? int.Parse(args["pageSize"]) : 100000;
 
             var collectionId = collection.ToHash();
-            var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
+            var fieldsOfInterest = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
             var fieldsToIndex = new HashSet<string> { "title", "text" };
 
             if (take == 0)
                 take = int.MaxValue;
 
             var model = new BagOfCharsModel();
-            var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
+            var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsOfInterest);
 
             using (var sessionFactory = new Database(logger))
             {
@@ -51,9 +51,10 @@ namespace Sir.Wikipedia
                             {
                                 writeSession.Put(document);
 
-                                foreach (var field in document.IndexableFields)
+                                foreach (var field in document.Fields)
                                 {
-                                    indexSession.Put(document.Id, field.KeyId, (string)field.Value);
+                                    if (fieldsToIndex.Contains(field.Name))
+                                        indexSession.Put(document.Id, field.KeyId, (string)field.Value);
                                 }
 
                                 debugger.Step(indexSession);

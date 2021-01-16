@@ -29,6 +29,17 @@ namespace Sir.Search
             LogInformation($"database initiated");
         }
 
+        public IEnumerable<Document> Select(string directory, ulong collectionId, HashSet<string> select, int skip = 0, int take = 0)
+        {
+            using (var reader = new DocumentStreamSession(directory, this))
+            {
+                foreach (var document in reader.ReadDocuments(collectionId, select, skip, take))
+                {
+                    yield return document;
+                }
+            }
+        }
+
         public void LogInformation(string message)
         {
             if (_logger != null)
@@ -210,7 +221,7 @@ namespace Sir.Search
 
                 foreach (var field in document.Fields)
                 {
-                    if (field.Value != null && field.Index)
+                    if (field.Value != null)
                     {
                         indexSession.Put(document.Id, field.KeyId, (T)field.Value);
                     }
@@ -229,7 +240,7 @@ namespace Sir.Search
 
             foreach (var field in document.Fields)
             {
-                if (field.Value != null && field.Index)
+                if (field.Value != null)
                 {
                     indexSession.Put(document.Id, field.KeyId, (T)field.Value);
                 }
@@ -259,7 +270,7 @@ namespace Sir.Search
             {
                 foreach (var field in document.Fields)
                 {
-                    if (field.Value != null && field.Index)
+                    if (field.Value != null)
                     {
                         indexSession.Put(field.DocumentId, field.KeyId, field.Tokens);
                     }
@@ -270,7 +281,7 @@ namespace Sir.Search
                 {
                     foreach (var field in document.Fields)
                     {
-                        if (field.Value != null && field.Index)
+                        if (field.Value != null)
                         {
                             field.Analyze(model);
                         }

@@ -27,7 +27,7 @@ namespace Sir.Search
             {
                 field.DocumentId = document.Id;
 
-                if (field.Value != null && field.Store)
+                if (field.Value != null)
                 {
                     Write(field, docMap);
                 }

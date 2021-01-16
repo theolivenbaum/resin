@@ -8,13 +8,12 @@ namespace Sir.Wikipedia
 {
     public static class WikipediaHelper
     {
-        public static IEnumerable<Document> ReadWP(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Document> ReadWP(string fileName, int skip, int take, HashSet<string> fieldsOfInterest)
         {
-            return ReadGZipJsonFile(fileName, skip, take, fieldsToStore, fieldsToIndex);
+            return ReadGZipJsonFile(fileName, skip, take, fieldsOfInterest);
         }
 
-        public static IEnumerable<Document> ReadGZipJsonFile(
-            string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Document> ReadGZipJsonFile(string fileName, int skip, int take, HashSet<string> fieldsOfInterest)
         {
             using (var stream = File.OpenRead(fileName))
             using (var zip = new GZipStream(stream, CompressionMode.Decompress))
@@ -46,19 +45,12 @@ namespace Sir.Wikipedia
 
                         foreach (var kvp in jobject)
                         {
-                            var store = fieldsToStore.Contains(kvp.Key);
-                            var index = fieldsToIndex.Contains(kvp.Key);
-
-                            if (store || index)
-                                fields.Add(new Field(kvp.Key, kvp.Value.ToString(), index:index, store:store));
+                            if (fieldsOfInterest.Contains(kvp.Key))
+                                fields.Add(new Field(kvp.Key, kvp.Value.ToString()));
                         }
 
                         fields.Add(
-                            new Field(
-                                "url", 
-                                $"https://www.wikidata.org/wiki/{jobject["wikibase_item"]}", 
-                                index:false, 
-                                store:true));
+                            new Field("url", $"https://www.wikidata.org/wiki/{jobject["wikibase_item"]}"));
 
                         yield return new Document(fields);
                         took++;
@@ -69,7 +61,7 @@ namespace Sir.Wikipedia
             }
         }
 
-        public static IEnumerable<Document> ReadJsonFile(string fileName, int skip, int take, HashSet<string> fieldsToStore, HashSet<string> fieldsToIndex)
+        public static IEnumerable<Document> ReadJsonFile(string fileName, int skip, int take, HashSet<string> fieldsOfInterest)
         {
             using (var stream = File.OpenRead(fileName))
             using (var reader = new StreamReader(stream))
@@ -100,11 +92,8 @@ namespace Sir.Wikipedia
 
                         foreach (var kvp in jobject)
                         {
-                            var store = fieldsToStore.Contains(kvp.Key);
-                            var index = fieldsToIndex.Contains(kvp.Key);
-
-                            if (store || index)
-                                fields.Add(new Field(kvp.Key, kvp.Value.Value<object>(), index:index, store:store));
+                            if (fieldsOfInterest.Contains(kvp.Key))
+                                fields.Add(new Field(kvp.Key, kvp.Value.Value<object>()));
                         }
 
                         yield return new Document(fields);

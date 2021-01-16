@@ -24,13 +24,13 @@ namespace Sir.Wikipedia
             var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
 
             var collectionId = collection.ToHash();
-            var fieldsToStore = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
+            var fieldsOfInterest = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
             var fieldsToIndex = new HashSet<string> { "title", "text" };
 
             if (take == 0)
                 take = int.MaxValue;
 
-            var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsToStore, fieldsToIndex);
+            var payload = WikipediaHelper.ReadWP(fileName, skip, take, fieldsOfInterest);
 
             using (var sessionFactory = new Database(logger))
             {

@@ -1,6 +1,5 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
-using Sir.Documents;
 using Sir.Search;
 using Sir.VectorSpace;
 using System;
@@ -15,7 +14,7 @@ namespace Sir.Crawl
 {
     public class CrawlUserDirectoryCommand : ICommand
     {
-        private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "last_crawl_date" };
+        private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "verified" };
         private readonly HashSet<string> _history = new HashSet<string>();
         private readonly IModel<string> _model = new BagOfCharsModel();
 
@@ -37,11 +36,11 @@ namespace Sir.Crawl
             {
                 foreach (var userDirectory in Directory.EnumerateDirectories(rootUserDirectory))
                 {
-                    var lastCrawlDateKeyId = database.GetKeyId(userDirectory, urlCollectionId, urlCollectionId);
+                    var verifiedKeyId = database.GetKeyId(userDirectory, urlCollectionId, "verified".ToHash());
 
-                    foreach (var url in Urls(userDirectory, urlCollectionId, database))
+                    foreach (var url in database.Select(userDirectory, urlCollectionId, _select))
                     {
-                        DateTime lastCrawlDate = DateTime.MinValue;
+                        bool verified = false;
                         Uri uri = null;
                         string scope = null;
 
@@ -51,11 +50,11 @@ namespace Sir.Crawl
                                 uri = new Uri((string)field.Value);
                             else if (field.Name == "scope")
                                 scope = (string)field.Value;
-                            else
-                                lastCrawlDate = (DateTime)field.Value;
+                            else if (field.Name == "verified")
+                                verified = (bool)field.Value;
                         }
 
-                        if (lastCrawlDate > DateTime.MinValue)
+                        if (verified)
                             continue;
 
                         var collectionId = uri.Host.ToHash();
@@ -64,11 +63,10 @@ namespace Sir.Crawl
                         try
                         {
                             var time = Stopwatch.StartNew();
-                            var timeOfCrawl = DateTime.Now;
                             var documents = DoCrawl(uri, htmlClient, siteWide, logger).Take(maxNoRequestsPerSession).ToList();
 
                             database.Write(dataDirectory, collectionId, documents, _model);
-                            //database.Update(userDirectory, urlCollectionId, url.Id, lastCrawlDateKeyId, timeOfCrawl);
+                            database.Update(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
 
                             logger.LogInformation($"requesting {documents.Count} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
                         }
@@ -111,7 +109,8 @@ namespace Sir.Crawl
             {
                 new Field("title", title),
                 new Field("text", text.ToString()),
-                new Field("url", uri.ToString())
+                new Field("url", uri.ToString()),
+                new Field("last_crawl_date", DateTime.Now)
             });
 
             if (siteWide)

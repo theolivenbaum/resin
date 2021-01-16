@@ -39,8 +39,8 @@ namespace Sir.Mnist
 
                     foreach (var image in images)
                     {
-                        var imageField = new Field("image", image.Pixels, index: true, store: true);
-                        var labelField = new Field("label", image.Label, index: false, store: true);
+                        var imageField = new Field("image", image.Pixels);
+                        var labelField = new Field("label", image.Label);
                         var document = new Document(new Field[] { imageField, labelField });
 
                         writeSession.Put(document);

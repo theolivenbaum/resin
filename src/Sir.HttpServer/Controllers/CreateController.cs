@@ -77,13 +77,14 @@ namespace Sir.HttpServer.Controllers
             if (urls.Length == 0 || urls[0] == null)
                 return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = "URL list is empty." });
 
+            var uris = new List<(Uri uri, string scope)>();
+
             //validate that all entries are parsable into Uris
             try
             {
-                var uris = new List<Uri>();
                 foreach (var url in urls)
                 {
-                    uris.Add(new Uri(url.Replace("page://", "https://").Replace("site://", "https://")));
+                    uris.Add((new Uri(url.Replace("page://", "https://").Replace("site://", "https://")), url.StartsWith("page://") ? "page" : "site"));
                 }
             }
             catch (Exception ex)
@@ -99,41 +100,23 @@ namespace Sir.HttpServer.Controllers
                 Directory.CreateDirectory(userDirectory);
             }
 
-            var collectionId = "url".ToHash();
+            var urlCollectionId = "url".ToHash();
             var documents = new List<Document>();
 
-            foreach (var url in urls)
+            foreach (var uri in uris)
             {
-                var uri = new Uri(url.Replace("page://", "https://").Replace("site://", "https://"));
-
                 documents.Add(new Document(new Field[] 
                 {
-                    new Field(
-                        "url",
-                        uri.ToString(),
-                        index: false,
-                        store: true),
-                    new Field(
-                        "host",
-                        uri.Host,
-                        index: false,
-                        store: true),
-                    new Field(
-                        "last_crawl_date",
-                        DateTime.MinValue,
-                        index: false,
-                        store: true),
-                    new Field(
-                        "scope", 
-                        url.StartsWith("page://") ? "page" : "site", 
-                        index:false, 
-                        store:true)
+                    new Field("url", uri.ToString()),
+                    new Field("host", uri.uri.Host),
+                    new Field("scope", uri.scope),
+                    new Field("verified", false)
                 }));
             }
 
             Database.Store(
                 userDirectory,
-                collectionId,
+                urlCollectionId,
                 documents);
 
             return RedirectToAction("Index", "Search", new { queryId });

@@ -15,19 +15,15 @@ namespace Sir.Search
         public long DocumentId { get; set; }
         public string Name { get; }
         public object Value { get; set; }
-        public bool Index { get; }
-        public bool Store { get; }
         public IEnumerable<IVector> Tokens { get { return _tokens; } }
 
-        public Field(string name, object value, long keyId = -1, bool index = true, bool store = true, long documentId = -1)
+        public Field(string name, object value, long keyId = -1, long documentId = -1)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
             Name = name;
             Value = value;
-            Index = index;
-            Store = store;
             KeyId = keyId;
             DocumentId = documentId;
         }
