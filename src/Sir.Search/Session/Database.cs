@@ -26,7 +26,7 @@ namespace Sir.Search
             _logger = logger;
             _keys = new Dictionary<ulong, IDictionary<ulong, long>>();
 
-            LogInformation($"database initiated");
+            LogDebug($"database initiated");
         }
 
         public IEnumerable<Document> Select(string directory, ulong collectionId, HashSet<string> select, int skip = 0, int take = 0)
@@ -240,9 +240,9 @@ namespace Sir.Search
 
             foreach (var field in document.Fields)
             {
-                if (field.Value != null)
+                if (field.Value != null && field.Value is T typedValue)
                 {
-                    indexSession.Put(document.Id, field.KeyId, (T)field.Value);
+                    indexSession.Put(document.Id, field.KeyId, typedValue);
                 }
             }
         }
@@ -331,7 +331,15 @@ namespace Sir.Search
             }
         }
 
-        public void UpdateDocumentField(string directory, ulong collectionId, long documentId, long keyId, object value)
+        public void Store(string directory, ulong collectionId, Document document)
+        {
+            using (var writeSession = new WriteSession(new DocumentWriter(directory, collectionId, this)))
+            {
+                writeSession.Put(document);
+            }
+        }
+
+        public void Update(string directory, ulong collectionId, long documentId, long keyId, object value)
         {
             using (var updateSession = new UpdateSession(directory, collectionId, this))
             {
@@ -339,19 +347,22 @@ namespace Sir.Search
             }
         }
 
-        public bool Exists<T>(string directory, string collection, string key, T value, IModel<T> model)
+        public bool DocumentExists<T>(string directory, string collection, string key, T value, IModel<T> model)
         {
             var query = new QueryParser<T>(directory, this, model, _logger)
                 .Parse(collection, value, key, key, and: true, or: false);
 
-            using (var searchSession = new SearchSession(directory, this, model, _logger))
+            if (query != null)
             {
-                var document = searchSession.SearchScalar(query);
-
-                if (document != null)
+                using (var searchSession = new SearchSession(directory, this, model, _logger))
                 {
-                    if (document.Score >= model.IdenticalAngle)
-                        return true;
+                    var document = searchSession.SearchScalar(query);
+
+                    if (document != null)
+                    {
+                        if (document.Score >= model.IdenticalAngle)
+                            return true;
+                    }
                 }
             }
 
@@ -545,7 +556,7 @@ namespace Sir.Search
 
         public void Dispose()
         {
-            LogInformation($"sessionfactory disposed");
+            LogDebug($"database disposed");
         }
     }
 }

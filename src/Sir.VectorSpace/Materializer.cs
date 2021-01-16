@@ -11,7 +11,8 @@ namespace Sir.VectorSpace
         {
             Parallel.ForEach(query.AllTerms(), term =>
             {
-                Materialize(term, new PostingsReader(term.Directory, sessionFactory));
+                using (var reader = new PostingsReader(term.Directory, sessionFactory))
+                    Materialize(term, reader);
             });
         }
 

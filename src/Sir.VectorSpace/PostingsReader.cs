@@ -9,7 +9,7 @@ namespace Sir.VectorSpace
     /// <summary>
     /// Read (reduce) postings.
     /// </summary>
-    public class PostingsReader
+    public class PostingsReader : IDisposable
     {
         private readonly IDatabase _sessionFactory;
         private readonly IDictionary<(ulong collectionId, long keyId), Stream> _streams;

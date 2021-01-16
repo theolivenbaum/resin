@@ -107,7 +107,7 @@ namespace Sir.HttpServer.Controllers
             {
                 documents.Add(new Document(new Field[] 
                 {
-                    new Field("url", uri.ToString()),
+                    new Field("url", uri.uri.ToString()),
                     new Field("host", uri.uri.Host),
                     new Field("scope", uri.scope),
                     new Field("verified", false)

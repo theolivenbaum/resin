@@ -20,12 +20,17 @@ namespace Sir.Cmd
                     .AddFilter("Microsoft", LogLevel.Warning)
                     .AddFilter("System", LogLevel.Warning)
                     .AddFilter("Sir", LogLevel.Information)
-                    .AddConsole();
+                    .AddConsole()
+                    .AddEventLog(new Microsoft.Extensions.Logging.EventLog.EventLogSettings 
+                    { 
+                        SourceName = "Sir.Cmd", 
+                        Filter = (source, level) => level >= LogLevel.Information
+                    });
             });
 
             var logger = loggerFactory.CreateLogger("Sir");
 
-            logger.LogInformation($"processing command: {string.Join(" ", args)}");
+            logger.LogDebug($"processing command: {string.Join(" ", args)}");
 
             var model = new BagOfCharsModel();
             var command = args[0].ToLower();
@@ -66,12 +71,12 @@ namespace Sir.Cmd
             }
             else
             {
-                logger.LogInformation("unknown command: {0}", command);
+                logger.LogDebug("unknown command: {0}", command);
 
                 return;
             }
 
-            logger.LogInformation($"executed {command} in {time.Elapsed}");
+            logger.LogDebug($"executed {command} in {time.Elapsed}");
         }
 
         private static ICommand ResolvePlugin(string command)

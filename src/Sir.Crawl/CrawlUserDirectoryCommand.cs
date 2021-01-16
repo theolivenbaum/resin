@@ -59,7 +59,7 @@ namespace Sir.Crawl
 
                         var collectionId = uri.Host.ToHash();
 
-                        if (database.Exists(dataDirectory, uri.Host, "url", uri.ToString(), _model))
+                        if (database.DocumentExists(dataDirectory, uri.Host, "url", uri.ToString(), _model))
                         {
                             continue;
                         }
@@ -75,7 +75,7 @@ namespace Sir.Crawl
                             if (result != null)
                             {
                                 database.StoreIndexAndWrite(dataDirectory, collectionId, result.Document, _model);
-                                database.UpdateDocumentField(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
+                                database.Update(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
 
                                 foreach (var link in result.Links.Take(maxNoRequestsPerSession))
                                 {
@@ -90,7 +90,8 @@ namespace Sir.Crawl
 
                                     var r = Crawl(link, htmlClient, siteWide: false, logger);
 
-                                    database.StoreIndexAndWrite(dataDirectory, collectionId, r.Document, _model);
+                                    if (r != null)
+                                        database.StoreIndexAndWrite(dataDirectory, collectionId, r.Document, _model);
                                 }
 
                                 logger.LogInformation($"requesting {result.Links.Count + 1} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
@@ -108,7 +109,7 @@ namespace Sir.Crawl
         private class CrawlResult
         {
             public Document Document { get; set; }
-            public IList<Uri> Links { get; set; }
+            public HashSet<Uri> Links { get; set; }
         }
 
         private CrawlResult Crawl(Uri uri, HtmlWeb htmlClient, bool siteWide, ILogger logger)
@@ -142,7 +143,7 @@ namespace Sir.Crawl
                 new Field("last_crawl_date", DateTime.Now)
                 });
 
-                var links = new List<Uri>();
+                var links = new HashSet<Uri>();
 
                 if (siteWide)
                 {
@@ -168,7 +169,10 @@ namespace Sir.Crawl
                                 linkUri = new Uri($"{root}{uri.PathAndQuery}{href}");
                             }
                         }
-                        catch { }
+                        catch (Exception ex) 
+                        {
+                            logger.LogInformation(ex.ToString());
+                        }
 
                         if (linkUri != null)
                         {
@@ -182,8 +186,10 @@ namespace Sir.Crawl
 
                 return new CrawlResult { Document = document, Links = links };
             }
-            catch 
+            catch (Exception ex)
             {
+                logger.LogInformation(ex.ToString());
+
                 return null;
             }
         }
