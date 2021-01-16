@@ -15,7 +15,6 @@ namespace Sir.Crawl
     public class CrawlUserDirectoryCommand : ICommand
     {
         private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "verified" };
-        private readonly HashSet<string> _sessionHistory = new HashSet<string>();
         private readonly IModel<string> _model = new BagOfCharsModel();
 
         public void Run(IDictionary<string, string> args, ILogger logger)
@@ -67,42 +66,39 @@ namespace Sir.Crawl
 
                         var siteWide = scope == "site";
 
-                        if (_sessionHistory.Add(uri.ToString()))
+                        try
                         {
-                            try
+                            var time = Stopwatch.StartNew();
+                            var idleTime = Stopwatch.StartNew();
+                            var result = Crawl(uri, htmlClient, siteWide, logger);
+
+                            if (result != null)
                             {
-                                var time = Stopwatch.StartNew();
-                                var idleTime = Stopwatch.StartNew();
-                                var result = Crawl(uri, htmlClient, siteWide, logger);
+                                database.StoreIndexAndWrite(dataDirectory, collectionId, result.Document, _model);
+                                database.UpdateDocumentField(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
 
-                                if (result != null)
+                                foreach (var link in result.Links.Take(maxNoRequestsPerSession))
                                 {
-                                    database.StoreIndexAndWrite(dataDirectory, collectionId, result.Document, _model);
-                                    database.UpdateDocumentField(userDirectory, urlCollectionId, url.Id, verifiedKeyId, true);
-
-                                    foreach (var link in result.Links.Take(maxNoRequestsPerSession))
+                                    while (idleTime.ElapsedMilliseconds < minIdleTime)
                                     {
-                                        while (idleTime.ElapsedMilliseconds < minIdleTime)
-                                        {
-                                            logger.LogInformation($"crawl sleeps");
+                                        logger.LogInformation($"crawl sleeps");
 
-                                            Thread.Sleep(100);
-                                        }
-
-                                        idleTime.Restart();
-
-                                        var r = Crawl(link, htmlClient, siteWide: false, logger);
-
-                                        database.StoreIndexAndWrite(dataDirectory, collectionId, r.Document, _model);
+                                        Thread.Sleep(100);
                                     }
 
-                                    logger.LogInformation($"requesting {result.Links.Count + 1} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
+                                    idleTime.Restart();
+
+                                    var r = Crawl(link, htmlClient, siteWide: false, logger);
+
+                                    database.StoreIndexAndWrite(dataDirectory, collectionId, r.Document, _model);
                                 }
+
+                                logger.LogInformation($"requesting {result.Links.Count + 1} resources from {uri.Host} and storing the responses took {time.Elapsed}.");
                             }
-                            catch (Exception ex)
-                            {
-                                logger.LogError(ex, "Crawl error");
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Crawl error");
                         }
                     }
                 }
