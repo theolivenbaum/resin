@@ -11,6 +11,10 @@
         <div class="logo1">
             <a href="/search?queryId=@Context.Request.Query["queryId"]&field=title&field=text"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
         </div>
+        <div id="topnav">
+            <a href="/settings" title="Settings">&#10033;</a>
+        </div>
+        <br style="clear:both;" />
         @RenderBody()
     </div>
     <footer>

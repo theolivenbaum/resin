@@ -172,7 +172,20 @@ input[type="text"] {
     margin-bottom: 15px;
     width: 55px;
     height: 55px;
+    float:left;
 }
+
+#topnav{
+    float:right;
+    font-size:30px;
+    height:55px;
+    margin-top:6px;
+}
+
+#topnav a{
+    color:white;
+}
+
 .intro {
     font-size: 10pt;
     font-style: italic;

@@ -1,21 +1,36 @@
 ﻿@{
     string query = Context.Request.Query.ContainsKey("q") ? Context.Request.Query["q"].ToString() : null;
+    var expiresInDays = (int)ViewData["index_expires_in_days"];
+    var expired = false;
+
+    if (expiresInDays < 0)
+    {
+        expired = true;
+        expiresInDays = Math.Abs(expiresInDays);
+    }
 }
 
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))
 {
     <div class="input-wrapper">
         <div class="q">
-            <input type="text" id="q" name="q" class="q" placeholder="Search this index (enter keywords or phrase)" value="@query" tabindex="0" />
+            <input type="text" id="q" name="q" class="q" placeholder="Search this index (keywords or phrase)" value="@query" tabindex="0" />
             <button type="submit" value="OR" name="OR" id="or" title="OR">Go</button>
         </div>
         <br style="clear:both;" />
         @if (query == null)
         {
-            <div>
-                <h3>Instructions</h3>
-                <p> alksudh alkjdhg lakjh laksjh lkashlkajsh laökh lkash pgaksh glaksjh lakjhl aksjh lkahgjf</p>
-            </div>
+    <div>
+        <h3>Status</h3>
+        @if (expired)
+        {
+            <p>This index expired in @expiresInDays days ago and will soon be removed from our system.</p>
+        }
+        else
+        {
+            <p>This index expires in @expiresInDays days.</p>
+        }
+    </div>
         }
         <input type="hidden" value="0" name="skip" id="skip" />
         <input type="hidden" value="100" name="take" id="take" />
