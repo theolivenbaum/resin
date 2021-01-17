@@ -12,6 +12,9 @@ using System.Threading;
 
 namespace Sir.Crawl
 {
+    /// <summary>
+    /// crawluserdirectory --dataDirectory c:\data\resin --userDirectory c:\data\resin\user
+    /// </summary>
     public class CrawlUserDirectoryCommand : ICommand
     {
         private readonly HashSet<string> _select = new HashSet<string> { "url", "scope", "verified" };

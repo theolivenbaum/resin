@@ -24,7 +24,7 @@ namespace Sir.Wikipedia
             var sampleSize = args.ContainsKey("sampleSize") ? int.Parse(args["sampleSize"]) : 1000;
 
             var collectionId = collection.ToHash();
-            var fieldsOfInterest = new HashSet<string> { "language", "wikibase_item", "title", "text", "url" };
+            var fieldsOfInterest = new HashSet<string> { "title", "text", "url" };
 
             if (take == 0)
                 take = int.MaxValue;
