@@ -9,17 +9,17 @@
 <body>
     <div class="outer-container">
         <div class="logo1">
-            <a href="/search?queryId=@Context.Request.Query["queryId"]&field=title&field=text"><img src="apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            <a href="/search?queryId=@Context.Request.Query["queryId"]&field=title&field=text"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
         </div>
         <div id="topnav">
-            <a href="/settings" title="Settings">&#10033;</a>
+            <a href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>
         </div>
         <br style="clear:both;" />
         @RenderBody()
     </div>
     <footer>
         <div class="footer-nav">
-            <p><a href="/">Create index</a> | <a href="/about">About</a> | <a href="/terms">Terms</a> | <a href="/contact">Support</a> | <a href="/buymecoffee">Buy me a coffee</a></p>
+            <p><a href="/">New index</a> | <a href="/about?queryId=@Context.Request.Query["queryId"]">About</a> | <a href="/terms?queryId=@Context.Request.Query["queryId"]">Terms</a> | <a href="/contact?queryId=@Context.Request.Query["queryId"]">Support</a> | <a href="/buymecoffee?queryId=@Context.Request.Query["queryId"]">Buy me a coffee</a></p>
         </div>
     </footer>
 </body>

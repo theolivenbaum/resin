@@ -14,13 +14,14 @@
 {
     <div class="input-wrapper">
         <div class="q">
-            <input type="text" id="q" name="q" class="q" placeholder="Search this index (keywords or phrase)" value="@query" tabindex="0" />
+            <input type="text" id="q" name="q" class="q" placeholder="Search in this index (keywords or phrase)" value="@query" tabindex="0" />
             <button type="submit" value="OR" name="OR" id="or" title="OR">Go</button>
         </div>
         <br style="clear:both;" />
         @if (query == null)
         {
     <div>
+        <p>Bookmark this page or remember this index ID:<br /><span style="background-color:gray;">@Context.Request.Query["queryId"]</span></p>
         <h3>Status</h3>
         @if (expired)
         {
@@ -30,10 +31,12 @@
         {
             <p>This index expires in @expiresInDays days.</p>
         }
+        <h3>Settings</h3>
+        <p>Manage URLs and update frequency by clicking <a style="color:white;" href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>.</p>
     </div>
         }
         <input type="hidden" value="0" name="skip" id="skip" />
         <input type="hidden" value="100" name="take" id="take" />
-        <input type="hidden" value="@Context.Request.Query["queryId"].ToString()" name="queryId" id="queryId" />
+        <input type="hidden" value="@Context.Request.Query["queryId"]" name="queryId" id="queryId" />
     </div>
 }

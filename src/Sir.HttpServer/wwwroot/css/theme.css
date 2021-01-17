@@ -179,7 +179,7 @@ input[type="text"] {
     float:right;
     font-size:30px;
     height:55px;
-    margin-top:6px;
+    margin-top: 8px;
 }
 
 #topnav a{
@@ -339,4 +339,8 @@ footer p {
     padding: 0px 10px 0px 10px;
     margin: 0px 0px 0px 0px;
     height: 30px;
+}
+
+.options-menu a{
+    font-weight:600;
 }
