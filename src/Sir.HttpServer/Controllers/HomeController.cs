@@ -35,5 +35,11 @@ namespace Sir.HttpServer.Controllers
         {
             return View();
         }
+
+        [Route("/buymecoffee")]
+        public ActionResult BuyMeCoffee()
+        {
+            return View();
+        }
     }
 }
