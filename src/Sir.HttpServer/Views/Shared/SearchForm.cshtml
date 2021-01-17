@@ -6,14 +6,19 @@
 {
     <div class="input-wrapper">
         <div class="q">
-            <input type="text" id="q" name="q" class="q" placeholder="Keywords or phrase" value="@query" />
-        </div>
-        <div class="buttons">
+            <input type="text" id="q" name="q" class="q" placeholder="Keywords or phrase" value="@query" tabindex="0" />
             <button type="submit" value="OR" name="OR" id="or" title="OR">Go</button>
         </div>
+        <br style="clear:both;" />
+        @if (query == null)
+        {
+            <div>
+                <h3>Instructions</h3>
+                <p> alksudh alkjdhg lakjh laksjh lkashlkajsh laökh lkash pgaksh glaksjh lakjhl aksjh lkahgjf</p>
+            </div>
+        }
+        <input type="hidden" value="0" name="skip" id="skip" />
+        <input type="hidden" value="100" name="take" id="take" />
+        <input type="hidden" value="@Context.Request.Query["queryId"].ToString()" name="queryId" id="queryId" />
     </div>
-    <div style="clear:both;"></div>
-    <input type="hidden" value="0" name="skip" id="skip" />
-    <input type="hidden" value="100" name="take" id="take" />
-    <input type="hidden" value="@Context.Request.Query["queryId"].ToString()" name="queryId" id="queryId" />
 }

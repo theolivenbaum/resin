@@ -213,97 +213,36 @@ input[type="text"].collection {
 }
 
 .input-wrapper {
-    height: 25px;
     width: 100%;
 }
 
-input[type="text"].q {
-    width: 100%;
-    padding: 0px 0px 0px 5px;
-    margin: 0px 0px 0px 0px;
-    border: solid 1px #CCC;
-    height: 21px;
-}
-
-div.buttons button {
-    width: 100%;
+div.q input[type="text"] {
+    float:left;
+    width: 90%;
     padding: 0px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
-    border: solid 1px #CCC;
-    height: 23px;
+    border: none;
+    height: 30px;
+    background-color:white;
+    color:black;
 }
 
 div.q {
-    float: left;
-    width: 85%;
-    height: 25px;
+    width: 100%;
 }
 
-div.buttons {
-    float: left;
-    width: 15%;
-    height: 25px;
+div.q button {
+    float:left;
+    width: 10%;
+    border-top: 1px solid orange;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+    height: 30px;
 }
 
-@media only screen and (max-width: 935px) {
-    div.q {
-        width: 85%;
-    }
-
-    div.buttons {
-        width: 15%;
-    }
-}
-
-@media only screen and (max-width: 375px) {
-    div.q {
-        width: 85%;
-    }
-
-    div.buttons {
-        width: 15%;
-    }
-}
-
-@media only screen and (max-width: 335px) {
-    div.q {
-        width: 80%;
-    }
-
-    div.buttons {
-        width: 20%;
-    }
-}
-
-@media only screen and (max-width: 315px) {
-    div.q {
-        width: 70%;
-    }
-
-    div.buttons {
-        width: 30%;
-    }
-}
-
-@media only screen and (max-width: 235px) {
-    div.q {
-        width: 60%;
-    }
-
-    div.buttons {
-        width: 40%;
-    }
-}
-
-@media only screen and (max-width: 195px) {
-    div.q {
-        width: 60%;
-    }
-
-    div.buttons {
-        width: 40%;
-    }
-}
 
 .toolbar-wrapper {
     margin-left: 0px;
@@ -377,4 +316,14 @@ footer p {
     width: 80%;
     min-height: 100px;
     padding: 5px 5px 5px 5px;
+}
+
+#create {
+    border-top: 1px solid orange;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 0px 10px 0px 10px;
+    margin: 0px 0px 0px 0px;
+    height: 30px;
 }
