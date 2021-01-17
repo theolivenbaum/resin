@@ -2,18 +2,20 @@
     Layout = "~/Views/_Layout.cshtml";
     ViewBag.Title = "CrawlCrawler";
 }
-<form action="/crawl/@Context.Request.QueryString" method="post">
-    <div id="create-collection-form">
-        <h1>About this service</h1>
-        <p>
-            CrawlCrawler is a pay-as-you-go search service that 
-            hosts search indices and keeps them updated on a regular basis. 
-            CrawlCrawler provides a HTTP query API and GUI for users to use when they interact with their indices.
-        </p>
-        <p>
-            Users create search indices here.
-            Users decide what content to include in their indices.
-            Users use this service to query their indices.
-        </p>
-    </div>
-</form>
+<h1>About this service</h1>
+<h2>Crawlcrawler is a pay-as-you-go search service</h2>
+<p>
+    CrawlCrawler is a pay-as-you-go search service that
+    hosts search indices and keeps them updated on a regular basis.
+    CrawlCrawler provides a HTTP query API and GUI for users to use when they interact with their indices.
+</p>
+<h3>Crawlcrawler is a service provider</h3>
+<p>
+    Users create search indices here.
+    Users decide what content to include in their indices.
+    Users use this service to query their indices.
+</p>
+<h3>Crawlcrawler is F/OSS</h3>
+<p>
+    CrawlCrawler.com and its backend, <a href="https:/github.com/kreeben/resin">Resin.Search</a> is maintained by Marcus Lager from Helsingborg, Sweden.
+</p>
