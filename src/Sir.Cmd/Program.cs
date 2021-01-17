@@ -32,7 +32,6 @@ namespace Sir.Cmd
 
             logger.LogDebug($"processing command: {string.Join(" ", args)}");
 
-            var model = new BagOfCharsModel();
             var command = args[0].ToLower();
             var flags = ParseArgs(args);
             var plugin = ResolvePlugin(command);
@@ -63,7 +62,7 @@ namespace Sir.Cmd
             }
             else if (command == "optimize")
             {
-                Optimize(flags, model, logger);
+                Optimize(flags, logger);
             }
             else if (command == "rename")
             {
@@ -102,10 +101,7 @@ namespace Sir.Cmd
             return dic;
         }
 
-        /// <summary>
-        /// Required args: collection, skip, take, reportFrequency, fields
-        /// </summary>
-        private static void Optimize<T>(IDictionary<string, string> args, IModel<T> model, ILogger logger)
+        private static void Optimize(IDictionary<string, string> args, ILogger logger)
         {
             var dataDirectory = args["dataDirectory"];
             var collection = args["collection"];
@@ -122,7 +118,7 @@ namespace Sir.Cmd
                     dataDirectory,
                     collection, 
                     fields,
-                    model,
+                    new BagOfCharsModel(),
                     skip,
                     take,
                     reportFrequency,
@@ -131,9 +127,6 @@ namespace Sir.Cmd
             }
         }
 
-        /// <summary>
-        /// Required args: sourceFileName, resultFileName, length
-        /// </summary>
         private static void Slice(IDictionary<string, string> args)
         {
             var file = args["sourceFileName"];
@@ -150,9 +143,6 @@ namespace Sir.Cmd
             }
         }
 
-        /// <summary>
-        /// Required args: collection
-        /// </summary>
         private static void Truncate(string dataDirectory, string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
@@ -163,9 +153,6 @@ namespace Sir.Cmd
             }
         }
 
-        /// <summary>
-        /// Required args: collection
-        /// </summary>
         private static void TruncateIndex(string dataDirectory, string collection, ILogger log)
         {
             var collectionId = collection.ToHash();
