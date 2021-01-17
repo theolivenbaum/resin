@@ -95,31 +95,40 @@ namespace Sir.HttpServer.Controllers
             var queryId = Guid.NewGuid().ToString();
             var userDirectory = Path.Combine(Config.Get("user_dir"), queryId);
 
-            if (!Directory.Exists(userDirectory))
+            try
             {
-                Directory.CreateDirectory(userDirectory);
-            }
-
-            var urlCollectionId = "url".ToHash();
-            var documents = new List<Document>();
-
-            foreach (var uri in uris)
-            {
-                documents.Add(new Document(new Field[] 
+                if (Directory.Exists(userDirectory))
                 {
+                    return new ConflictResult();
+                }
+
+                Directory.CreateDirectory(userDirectory);
+
+                var urlCollectionId = "url".ToHash();
+                var documents = new List<Document>();
+
+                foreach (var uri in uris)
+                {
+                    documents.Add(new Document(new Field[]
+                    {
                     new Field("url", uri.uri.ToString()),
                     new Field("host", uri.uri.Host),
                     new Field("scope", uri.scope),
                     new Field("verified", false)
-                }));
+                    }));
+                }
+
+                Database.Store(
+                    userDirectory,
+                    urlCollectionId,
+                    documents);
+
+                return RedirectToAction("Index", "Search", new { queryId });
             }
-
-            Database.Store(
-                userDirectory,
-                urlCollectionId,
-                documents);
-
-            return RedirectToAction("Index", "Search", new { queryId });
+            catch
+            {
+                return new ConflictResult();
+            }
         }
     }
 
