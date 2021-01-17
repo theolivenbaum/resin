@@ -1,5 +1,5 @@
 ﻿@{
-    var query = Context.Request.Query["q"].ToString();
+    string query = Context.Request.Query.ContainsKey("q") ? Context.Request.Query["q"].ToString() : null;
 }
 
 @using (Html.BeginRouteForm("default", new { controller = "Search" }, FormMethod.Get))

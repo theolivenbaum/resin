@@ -23,12 +23,12 @@ namespace Sir.HttpServer.Controllers
 
         [HttpGet("/search/")]
         [HttpPost("/search/")]
-        public async Task<IActionResult> Index(string q)
+        public async Task<IActionResult> Index(string q, string queryId)
         {
+            if (string.IsNullOrWhiteSpace(queryId)) return NotFound();
             if (string.IsNullOrWhiteSpace(q)) return View();
 
-            var timer = new Stopwatch();
-            timer.Start();
+            var timer = Stopwatch.StartNew();
 
             ViewData["q"] = q;
 
