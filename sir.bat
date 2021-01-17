@@ -1,1 +1,4 @@
-dotnet src\Sir.Cmd\bin\Release\net5.0\publish\Sir.Cmd.dll %*
+setlocal
+cd src\Sir.Cmd\bin\Release\net5.0\publish\
+dotnet Sir.Cmd.dll %*
+endlocal
