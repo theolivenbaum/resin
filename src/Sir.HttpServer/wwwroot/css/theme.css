@@ -299,11 +299,12 @@ footer p.footer-hero{
 
 footer {
     font-size: 10pt;
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 30px;
     min-height: 7px;
-    background-color: #1f1209;
+    background-color: #151515;
     padding: 5px 5px 5px 5px;
+    max-width: 925px;
 }
 
 footer a {
