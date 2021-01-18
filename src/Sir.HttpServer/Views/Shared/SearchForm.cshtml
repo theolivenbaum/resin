@@ -20,8 +20,9 @@
         <br style="clear:both;" />
         @if (query == null)
         {
-    <div>
-        <p>Bookmark this page or remember this index ID:<br /><span style="background-color:gray;">@Context.Request.Query["queryId"]</span></p>
+    <div style="background-color:#252525;padding: 5px 5px 5px 5px;margin-top:10px;">
+        <p>Bookmark this page. </p>
+        <p>Manage URLs and update frequency by clicking <a style="color:white;" href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>.</p>
         <h3>Status</h3>
         @if (expired)
         {
@@ -31,8 +32,6 @@
         {
             <p>This index expires in @expiresInDays days.</p>
         }
-        <h3>Settings</h3>
-        <p>Manage URLs and update frequency by clicking <a style="color:white;" href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>.</p>
     </div>
         }
         <input type="hidden" value="0" name="skip" id="skip" />

@@ -9,10 +9,13 @@
 <body>
     <div class="outer-container">
         <div class="logo1">
-            <a href="/search?queryId=@Context.Request.Query["queryId"]&field=title&field=text"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            <a href="/search?queryId=@Context.Request.Query["queryId"]"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
         </div>
         <div id="topnav">
-            <a href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>
+            @if (!string.IsNullOrWhiteSpace(Context.Request.Query["queryId"]))
+            {
+                <a href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>
+            }
         </div>
         <br style="clear:both;" />
         @RenderBody()

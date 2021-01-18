@@ -299,7 +299,7 @@ footer p.footer-hero{
 
 footer {
     font-size: 10pt;
-    margin-top: 30px;
+    margin-top: 20px;
     margin-bottom: 30px;
     max-width: 500px;
 }
@@ -339,6 +339,10 @@ footer p {
     padding: 0px 10px 0px 10px;
     margin: 0px 0px 0px 0px;
     height: 30px;
+}
+
+.options-menu{
+    line-height: 20px;
 }
 
 .options-menu a{
