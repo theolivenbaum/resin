@@ -26,6 +26,8 @@ namespace Sir.HttpServer.Controllers
                 throw new ArgumentNullException(nameof(returnUrl));
             }
 
+            var urlList = Request.Query["urls"].Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => new Uri(s).ToString()).ToList();
+
             Uri uri;
 
             try
@@ -37,10 +39,14 @@ namespace Sir.HttpServer.Controllers
             }
             catch (Exception ex)
             {
-                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = ex.Message });
-            }
+                ViewData["errorMessage"] = ex.Message;
 
-            var urlList = Request.Query["urls"].Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => new Uri(s).ToString()).ToList();
+                var query = $"?urls={string.Join("&urls=", urlList.Select(s => Uri.EscapeDataString(s)))}";
+
+                var retUri = new Uri(returnUrl + query, UriKind.Relative);
+
+                return Redirect(retUri.ToString());
+            }
 
             if (scope == "page")
             {
@@ -89,15 +95,23 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpPost("/createindex")]
-        public ActionResult CreateIndex(string[] urls, string agree)
+        public ActionResult CreateIndex(string[] urls, string agree, string returnUrl)
         {
-            if (agree != "yes")
+            if (urls.Length == 0 || urls[0] == null)
             {
-                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = "It is required that you read and agree to the terms." });
+                var queryString = $"?errorMessage=URL list is empty.";
+                var returnUri = new Uri(returnUrl + queryString, UriKind.Relative);
+
+                return Redirect(returnUri.ToString());
             }
 
-            if (urls.Length == 0 || urls[0] == null)
-                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = "URL list is empty." });
+            if (agree != "yes")
+            {
+                var queryString = $"?urls={string.Join("&urls=", urls.Select(s => Uri.EscapeDataString(s)))}&errorMessage=It is required that you read and agree to the terms.";
+                var returnUri = new Uri(returnUrl + queryString, UriKind.Relative);
+
+                return Redirect(returnUri.ToString());
+            }
 
             var uris = new List<(Uri uri, string scope)>();
 
@@ -111,7 +125,10 @@ namespace Sir.HttpServer.Controllers
             }
             catch (Exception ex)
             {
-                return View("/Views/Home/Index.cshtml", new CreateModel { ErrorMessage = $"URL list is not valid. {ex}" });
+                var queryString = $"?urls={string.Join("&urls=", urls.Select(s => Uri.EscapeDataString(s)))}&errorMessage=URL list is not valid. {ex}";
+                var returnUri = new Uri(returnUrl + queryString, UriKind.Relative);
+
+                return Redirect(returnUri.ToString());
             }
 
             var queryId = Guid.NewGuid().ToString();
@@ -152,10 +169,5 @@ namespace Sir.HttpServer.Controllers
                 return new ConflictResult();
             }
         }
-    }
-
-    public class CreateModel
-    {
-        public string ErrorMessage { get; set; }
     }
 }

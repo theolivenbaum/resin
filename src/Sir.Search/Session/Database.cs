@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Sir.Search
 {
     /// <summary>
-    /// Multi-directory stream dispatcher with helper methods for writing, indexing, optimizing and truncating collections.
+    /// Multi-directory stream dispatcher with helper methods for writing, indexing, optimizing, updating and truncating collections.
     /// </summary>
     public class Database : IDisposable, IDatabase
     {

@@ -1,5 +1,4 @@
-﻿@model Sir.HttpServer.Controllers.CreateModel
-@{
+﻿@{
     Layout = "~/Views/_LayoutStart.cshtml";
     ViewBag.Title = "Create your own personal search engine - CrawlCrawler";
 }
@@ -17,17 +16,17 @@
     {
         queryString = $"?{queryString}";
     }
+
+    var errorMessage = Context.Request.Query["errorMessage"].ToString();
 }
 <div id="create-collection-form">
     <form action="/addurl" method="get">
-        <input type="hidden" name="returnUrl" value="/" />
-        <span class="intro">A pay-as-you-go search service from Crawlcrawler</span>
         <h1>Create your own personalized web search index</h1>
         <p>
             Add some of your favorite pages and sites to a search index that you curate and command over.
             You may add more sites and pages later on and excluding that which you are not interested in is easy.
         </p>
-        <h4>Add URLs</h4>
+        <h2>Add URLs</h2>
         <p>(Click on an URL to remove it from the list.)</p>
         <p>
             <label>
@@ -40,9 +39,9 @@
             </label>
         </p>
         <div>
-            @if (Model != null && Model.ErrorMessage != null)
+            @if (errorMessage != null)
             {
-                <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
+                <div><span style="background-color:orangered;font-size:10pt;">@errorMessage</span></div>
             }
             <label>
                 <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
@@ -59,6 +58,7 @@
         {
             <input type="hidden" name="urls" value="@url" />
         }
+        <input type="hidden" name="returnUrl" value="/" />
     </form>
     <form action="/createindex" method="post">
         <p>
@@ -68,11 +68,12 @@
             </label>
         </p>
         <p>
-            <input type="submit" id="create" name="create" value="Create search index" />
+            <input type="submit" class="action-button" value="Create search index" />
         </p>
         @foreach (var url in urlList)
         {
             <input type="hidden" name="urls" value="@url" />
         }
+        <input type="hidden" name="returnUrl" value="/" />
     </form>
 </div>

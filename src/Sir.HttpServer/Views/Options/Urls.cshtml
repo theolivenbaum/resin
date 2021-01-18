@@ -1,22 +1,21 @@
-﻿@model Sir.HttpServer.Controllers.CreateModel
-@{
+﻿@{
     Layout = "~/Views/_Layout.cshtml";
     ViewBag.Title = "Options - Urls - CrawlCrawler";
 }
 @{
-    var urlList = Context.Request.Query["urls"].ToList();
+    IList<string> urlList = Context.Request.Query["urls"].ToList();
+
+    if (urlList.Count == 0)
+        urlList = (IList<string>)ViewData["urls"];
 
     if (urlList.Count == 0)
     {
         urlList.Add("site://en.wikipedia.org/");
     }
 
-    var queryString = Context.Request.QueryString.ToString();
+    var queryString = $"?queryId={Context.Request.Query["queryId"]}&urls={string.Join("&urls=", urlList.Select(s => Uri.EscapeDataString(s)))}";
 
-    if (!queryString.StartsWith("?"))
-    {
-        queryString = $"?{queryString}";
-    }
+    var errorMessage = Context.Request.Query["errorMessage"].ToString();
 }
 <span>
     <a href="/search?queryId=@Context.Request.Query["queryId"]">&#8617; Back to search</a>
@@ -24,8 +23,7 @@
 <h1>Add/remove URLs</h1>
 <div id="create-collection-form">
     <form action="/addurl" method="get">
-        <input type="hidden" name="returnUrl" value="/" />
-        <p>(Click on an URL to remove it from the list.)</p>
+        <p>Click on an URL to remove it from the list. Click "save" when you are done editing URLs.</p>
         <p>
             <label>
                 <input type="radio" id="scope" name="scope" value="page" checked />
@@ -37,9 +35,9 @@
             </label>
         </p>
         <div>
-            @if (Model != null && Model.ErrorMessage != null)
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
             {
-                <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
+                <div><span style="background-color:orangered;font-size:10pt;">@errorMessage</span></div>
             }
             <label>
                 <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
@@ -56,5 +54,17 @@
         {
             <input type="hidden" name="urls" value="@url" />
         }
+        <input type="hidden" name="queryId" value="@Context.Request.Query["queryId"]" />
+        <input type="hidden" name="returnUrl" value="/options/urls" />
+    </form>
+    <form action="/options/urls/save" method="post">
+        <p>
+            <input type="submit" class="action-button" value="Save" />
+        </p>
+        @foreach (var url in urlList)
+        {
+            <input type="hidden" name="urls" value="@url" />
+        }
+        <input type="hidden" name="queryId" value="@Context.Request.Query["queryId"]" />
     </form>
 </div>

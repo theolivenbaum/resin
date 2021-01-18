@@ -2,7 +2,7 @@
     padding: 0px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
     font-family: Arial, sans-serif;
-    font-size: medium;
+    font-size: 10pt;
     background-color:black;
     color:white;
 }
@@ -10,13 +10,13 @@
 h1 {
     margin-top: 10px;
     margin-bottom: 16px;
-    font-size: 18pt;
+    font-size: 17pt;
 }
 
 h2 {
     margin-top: 20px;
     margin-bottom: 10px;
-    font-size: 14pt;
+    font-size: 13pt;
 }
 
 h3 {
@@ -150,6 +150,32 @@ button, input[type="button"], input[type="submit"] {
     vertical-align: middle;
 }
 
+div.q button {
+    float: left;
+    width: 10%;
+    border-top: 1px solid orange;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+    height: 30px;
+}
+
+input[type="submit"].action-button {
+    border-top: 1px solid orange;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding: 0px 10px 0px 10px;
+    margin: 0px 0px 0px 0px;
+    height: 30px;
+    font-size: 9pt;
+    background-color: #383838;
+    color: white;
+    vertical-align: middle;
+}
+
 select {
     background-color: black;
     border: 1px solid #f0f0f0;
@@ -246,19 +272,6 @@ div.q {
     width: 100%;
 }
 
-div.q button {
-    float:left;
-    width: 10%;
-    border-top: 1px solid orange;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
-    padding: 0px 0px 0px 0px;
-    margin: 0px 0px 0px 0px;
-    height: 30px;
-}
-
-
 .toolbar-wrapper {
     margin-left: 0px;
     margin-bottom: 10px;
@@ -346,16 +359,6 @@ nav p {
     width: 82%;
     min-height: 100px;
     padding: 5px 5px 5px 5px;
-}
-
-#create {
-    border-top: 1px solid orange;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
-    padding: 0px 10px 0px 10px;
-    margin: 0px 0px 0px 0px;
-    height: 30px;
 }
 
 .options-menu{

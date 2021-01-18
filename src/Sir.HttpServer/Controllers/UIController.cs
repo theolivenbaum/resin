@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Sir.Search;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Sir.HttpServer.Controllers
 {
