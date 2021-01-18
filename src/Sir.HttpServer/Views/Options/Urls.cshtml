@@ -24,6 +24,7 @@
 <h1>Add/remove URLs</h1>
 <div id="create-collection-form">
     <form action="/addurl" method="get">
+        <input type="hidden" name="returnUrl" value="/" />
         <p>(Click on an URL to remove it from the list.)</p>
         <p>
             <label>
@@ -46,7 +47,7 @@
             <div id="sitelist">
                 @foreach (var url in urlList)
                 {
-                    var href = $"/deleteurl{queryString}&url={url}";
+                    var href = $"/deleteurl{queryString}&url={url}&returnUrl=/options/urls";
                     <a href="@href">@url</a><br />
                 }
             </div>

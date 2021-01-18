@@ -20,9 +20,9 @@
 }
 <div id="create-collection-form">
     <form action="/addurl" method="get">
-
-        <span class="intro">Pay-as-you-go search service from Crawlcrawler</span>
-        <h1>Create a personalized web search index</h1>
+        <input type="hidden" name="returnUrl" value="/" />
+        <span class="intro">A pay-as-you-go search service from Crawlcrawler</span>
+        <h1>Create your own personalized web search index</h1>
         <p>
             Add some of your favorite pages and sites to a search index that you curate and command over.
             You may add more sites and pages later on and excluding that which you are not interested in is easy.
@@ -42,7 +42,7 @@
         <div>
             @if (Model != null && Model.ErrorMessage != null)
             {
-            <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
+                <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
             }
             <label>
                 <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
@@ -50,7 +50,7 @@
             <div id="sitelist">
                 @foreach (var url in urlList)
                 {
-                    var href = $"/deleteurl{queryString}&url={url}";
+                    var href = $"/deleteurl{queryString}&url={url}&returnUrl=/";
                     <a href="@href">@url</a><br />
                 }
             </div>

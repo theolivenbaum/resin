@@ -21,7 +21,7 @@
         @if (query == null)
         {
     <div style="padding: 5px 5px 5px 5px;">
-        <p>Bookmark this page. </p>
+        <p>This is your search index. Bookmark this page. </p>
         <p>Manage URLs and update frequency by clicking <a style="color:white;" href="/options?queryId=@Context.Request.Query["queryId"]" title="Options">&#9776;</a>.</p>
         @if (expired)
         {
@@ -29,7 +29,7 @@
         }
         else
         {
-            <p>This index expires in @expiresInDays days.</p>
+            <p>Index expires in @expiresInDays days.</p>
         }
     </div>
         }

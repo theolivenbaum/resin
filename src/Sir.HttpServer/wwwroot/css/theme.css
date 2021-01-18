@@ -171,7 +171,7 @@ input[type="text"] {
 }
 
 .logo1 {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     width: 55px;
     height: 55px;
     float:left;
@@ -306,12 +306,18 @@ nav {
     min-height: 7px;
     background-color: #151515;
     padding: 5px 5px 5px 10px;
+    text-align: center;
 }
 
 nav a {
     text-decoration: none;
     color: #ff7700;
 }
+
+nav p {
+    margin-top: 10px;
+}
+
 
 .nav-nav {
     color: silver;
@@ -323,12 +329,13 @@ nav a {
     margin-right:1px;
 }
 
-nav p {
-    margin-top: 10px;
+.nav-inner{
+    width: 100%;
+    max-width: 925px;
 }
 
 #siteurl {
-    width: 80%;
+    width: 82%;
     padding: 5px 5px 5px 5px;
     vertical-align:middle;
 }
@@ -336,7 +343,7 @@ nav p {
 #sitelist {
     border: 1px solid white;
     font-size: 10pt;
-    width: 80%;
+    width: 82%;
     min-height: 100px;
     padding: 5px 5px 5px 5px;
 }

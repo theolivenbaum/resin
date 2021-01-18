@@ -9,9 +9,11 @@
 <body>
     <nav>
         <div class="nav-nav">
-            <a href="/">New index</a> <span>|</span> <a href="/about?queryId=@Context.Request.Query["queryId"]">About</a> <span>|</span> <a href="/terms?queryId=@Context.Request.Query["queryId"]">Terms</a> <span>|</span> <a href="/contact?queryId=@Context.Request.Query["queryId"]">Support</a> <span>|</span> <a href="/buymecoffee?queryId=@Context.Request.Query["queryId"]">Buy me a coffee</a>
+            <div class="nav-inner">
+                <a href="/">New index</a> <span>|</span> <a href="/about?queryId=@Context.Request.Query["queryId"]">About</a> <span>|</span> <a href="/terms?queryId=@Context.Request.Query["queryId"]">Terms</a> <span>|</span> <a href="/contact?queryId=@Context.Request.Query["queryId"]">Help</a> <span>|</span> <a href="/buymecoffee?queryId=@Context.Request.Query["queryId"]">Buy me a coffee</a>
+            </div>
         </div>
-    </nav>
+</nav>
     <div class="outer-container">
         <div class="logo1">
             @if (!string.IsNullOrWhiteSpace(Context.Request.Query["queryId"]))

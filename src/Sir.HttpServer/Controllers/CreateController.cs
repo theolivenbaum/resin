@@ -14,8 +14,18 @@ namespace Sir.HttpServer.Controllers
         }
 
         [HttpGet("/addurl")]
-        public ActionResult AddUrl(string url, string scope)
+        public ActionResult AddUrl(string url, string scope, string returnUrl, string queryId)
         {
+            if (url is null)
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
+            if (returnUrl is null)
+            {
+                throw new ArgumentNullException(nameof(returnUrl));
+            }
+
             Uri uri;
 
             try
@@ -42,17 +52,26 @@ namespace Sir.HttpServer.Controllers
             }
 
             var queryString = $"?urls={string.Join("&urls=", urlList.Select(s => Uri.EscapeDataString(s)))}";
-            var returnUrl = $"{Request.Scheme}://{Request.Host}{queryString}";
 
-            return Redirect(returnUrl);
+            if (!string.IsNullOrWhiteSpace(queryId))
+                queryString += $"&queryId={queryId}";
+
+            var returnUri = new Uri(returnUrl + queryString, UriKind.Relative);
+
+            return Redirect(returnUri.ToString());
         }
 
         [HttpGet("/deleteurl")]
-        public ActionResult DeleteUrl(string url)
+        public ActionResult DeleteUrl(string url, string returnUrl, string queryId)
         {
             if (url is null)
             {
                 throw new ArgumentNullException(nameof(url));
+            }
+
+            if (returnUrl is null)
+            {
+                throw new ArgumentNullException(nameof(returnUrl));
             }
 
             var urlList = Request.Query["urls"].ToList();
@@ -61,9 +80,12 @@ namespace Sir.HttpServer.Controllers
 
             var queryString = $"?urls={string.Join("&urls=", urlList.Select(s => Uri.EscapeDataString(s)))}";
 
-            var returnUrl = $"{Request.Scheme}://{Request.Host}{queryString}";
+            if (!string.IsNullOrWhiteSpace(queryId))
+                queryString += $"&queryId={queryId}";
 
-            return Redirect(returnUrl);
+            var returnUri = new Uri(returnUrl + queryString, UriKind.Relative);
+
+            return Redirect(returnUri.ToString());
         }
 
         [HttpPost("/createindex")]
