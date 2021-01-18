@@ -9,7 +9,14 @@
 <body>
     <div class="outer-container">
         <div class="logo1">
-            <a href="/search?queryId=@Context.Request.Query["queryId"]"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            @if (!string.IsNullOrWhiteSpace(Context.Request.Query["queryId"]))
+            {
+                <a href="/search?queryId=@Context.Request.Query["queryId"]"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            }
+            else
+            {
+                <a href="/"><img src="/apple-touch-icon.png" title="CrawlCrawler" alt="CrawlCrawler" /></a>
+            }
         </div>
         <div id="topnav">
             @if (!string.IsNullOrWhiteSpace(Context.Request.Query["queryId"]))
@@ -22,7 +29,7 @@
     </div>
     <footer>
         <div class="footer-nav">
-            <p><a href="/">New index</a> | <a href="/about?queryId=@Context.Request.Query["queryId"]">About</a> | <a href="/terms?queryId=@Context.Request.Query["queryId"]">Terms</a> | <a href="/contact?queryId=@Context.Request.Query["queryId"]">Support</a> | <a href="/buymecoffee?queryId=@Context.Request.Query["queryId"]">Buy me a coffee</a></p>
+            <a href="/">New index</a> | <a href="/about?queryId=@Context.Request.Query["queryId"]">About</a> | <a href="/terms?queryId=@Context.Request.Query["queryId"]">Terms</a> | <a href="/contact?queryId=@Context.Request.Query["queryId"]">Support</a> | <a href="/buymecoffee?queryId=@Context.Request.Query["queryId"]">Buy me a coffee</a>
         </div>
     </footer>
 </body>
