@@ -1,8 +1,58 @@
-﻿@{
+﻿@model Sir.HttpServer.Controllers.CreateModel
+@{
     Layout = "~/Views/_Layout.cshtml";
     ViewBag.Title = "Options - Urls - CrawlCrawler";
 }
+@{
+    var urlList = Context.Request.Query["urls"].ToList();
+
+    if (urlList.Count == 0)
+    {
+        urlList.Add("site://en.wikipedia.org/");
+    }
+
+    var queryString = Context.Request.QueryString.ToString();
+
+    if (!queryString.StartsWith("?"))
+    {
+        queryString = $"?{queryString}";
+    }
+}
 <a href="/options?queryId=@Context.Request.Query["queryId"]"><h1>Options</h1></a>
 <h2>Urls</h2>
-<p>
-</p>
+<div id="create-collection-form">
+    <form action="/addurl" method="get">
+        <h3>Add URLs</h3>
+        <p>(Click on an URL to remove it from the list.)</p>
+        <p>
+            <label>
+                <input type="radio" id="scope" name="scope" value="page" checked />
+                Single page
+            </label>
+            <label>
+                <input type="radio" id="scope" name="scope" value="site" />
+                Site or directory
+            </label>
+        </p>
+        <div>
+            @if (Model != null && Model.ErrorMessage != null)
+            {
+                <div><span style="background-color:orangered;font-size:10pt;">@Model.ErrorMessage</span></div>
+            }
+            <label>
+                <input type="text" placeholder="Enter URL here, e.g. https://mysite.com" id="siteurl" name="url" /><input type="submit" value="Add" name="add" id="add" />
+            </label>
+            <div id="sitelist">
+                @foreach (var url in urlList)
+                {
+                    var href = $"/deleteurl{queryString}&url={url}";
+                    <a href="@href">@url</a><br />
+                }
+            </div>
+        </div>
+        @foreach (var url in urlList)
+        {
+            <input type="hidden" name="urls" value="@url" />
+        }
+    </form>
+</div>
