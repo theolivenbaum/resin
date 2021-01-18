@@ -18,9 +18,9 @@
         queryString = $"?{queryString}";
     }
 }
-<p>
-    <a href="/options?queryId=@Context.Request.Query["queryId"]">&#8617; Back to options</a>
-</p>
+<span>
+    <a href="/search?queryId=@Context.Request.Query["queryId"]">&#8617; Back to search</a>
+</span>
 <h1>Add/remove URLs</h1>
 <div id="create-collection-form">
     <form action="/addurl" method="get">

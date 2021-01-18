@@ -65,6 +65,7 @@ namespace Sir.Search
         public void Truncate(string directory, ulong collectionId)
         {
             var count = 0;
+            var key = Path.Combine(directory, collectionId.ToString()).ToHash();
 
             foreach (var file in Directory.GetFiles(directory, $"{collectionId}*"))
             {
@@ -74,7 +75,7 @@ namespace Sir.Search
 
             lock (_syncKeys)
             {
-                _keys.Remove(collectionId, out _);
+                _keys.Remove(key, out _);
             }
 
             LogInformation($"truncated collection {collectionId} ({count} files affected)");
@@ -126,7 +127,9 @@ namespace Sir.Search
                 count++;
             }
 
-            _keys.Remove(currentCollectionId, out _);
+            var key = Path.Combine(directory, currentCollectionId.ToString()).ToHash();
+
+            _keys.Remove(key, out _);
 
             LogInformation($"renamed collection {currentCollectionId} to {newCollectionId} ({count} files affected)");
         }
@@ -381,9 +384,11 @@ namespace Sir.Search
             foreach (var keyFile in Directory.GetFiles(directory, "*.kmap"))
             {
                 var collectionId = ulong.Parse(Path.GetFileNameWithoutExtension(keyFile));
+                var key = Path.Combine(directory, collectionId.ToString()).ToHash();
+
                 IDictionary<ulong, long> keys;
 
-                if (!_keys.TryGetValue(collectionId, out keys))
+                if (!_keys.TryGetValue(key, out keys))
                 {
                     keys = new Dictionary<ulong, long>();
 
@@ -405,7 +410,7 @@ namespace Sir.Search
 
                     lock (_syncKeys)
                     {
-                        _keys.Add(collectionId, keys);
+                        _keys.Add(key, keys);
                     }
 
                     LogInformation($"loaded key mappings into memory from directory {directory} in {timer.Elapsed}");
@@ -415,20 +420,17 @@ namespace Sir.Search
 
         public void RegisterKeyMapping(string directory, ulong collectionId, ulong keyHash, long keyId)
         {
-            if (!_keys.TryGetValue(collectionId, out _))
-            {
-                ReadKeys(directory);
-            }
+            var key = Path.Combine(directory, collectionId.ToString()).ToHash();
 
             IDictionary<ulong, long> keys;
 
-            if (!_keys.TryGetValue(collectionId, out keys))
+            if (!_keys.TryGetValue(key, out keys))
             {
                 keys = new ConcurrentDictionary<ulong, long>();
 
                 lock (_syncKeys)
                 {
-                    _keys.Add(collectionId, keys);
+                    _keys.Add(key, keys);
                 }
             }
 
@@ -445,14 +447,16 @@ namespace Sir.Search
 
         public long GetKeyId(string directory, ulong collectionId, ulong keyHash)
         {
+            var key = Path.Combine(directory, collectionId.ToString()).ToHash();
+
             IDictionary<ulong, long> keys;
 
-            if (!_keys.TryGetValue(collectionId, out keys))
+            if (!_keys.TryGetValue(key, out keys))
             {
                 ReadKeys(directory);
             }
 
-            if (keys != null || _keys.TryGetValue(collectionId, out keys))
+            if (keys != null || _keys.TryGetValue(key, out keys))
             {
                 return keys[keyHash];
             }
@@ -462,14 +466,16 @@ namespace Sir.Search
 
         public bool TryGetKeyId(string directory, ulong collectionId, ulong keyHash, out long keyId)
         {
+            var key = Path.Combine(directory, collectionId.ToString()).ToHash();
+
             IDictionary<ulong, long> keys;
 
-            if (!_keys.TryGetValue(collectionId, out keys))
+            if (!_keys.TryGetValue(key, out keys))
             {
                 ReadKeys(directory);
             }
 
-            if (keys != null || _keys.TryGetValue(collectionId, out keys))
+            if (keys != null || _keys.TryGetValue(key, out keys))
             {
                 if (keys.TryGetValue(keyHash, out keyId))
                 {

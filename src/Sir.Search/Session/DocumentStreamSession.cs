@@ -9,14 +9,14 @@ namespace Sir.Search
     public class DocumentStreamSession : IDisposable
     {
         private readonly string _directory;
-        protected readonly Database Database;
-        private readonly IDictionary<ulong, DocumentReader> _streamReaders;
+        private readonly Database _database;
+        private readonly IDictionary<ulong, DocumentReader> _documentReaders;
 
         public DocumentStreamSession(string directory, Database database) 
         {
             _directory = directory;
-            Database = database;
-            _streamReaders = new Dictionary<ulong, DocumentReader>();
+            _database = database;
+            _documentReaders = new Dictionary<ulong, DocumentReader>();
         }
 
 
@@ -104,10 +104,11 @@ namespace Sir.Search
 
             var took = 0;
             long docId = skip;
+            var keyId = _database.GetKeyId(_directory, collectionId, field.ToHash());
 
             while (docId < docCount && took++ < take)
             {
-                var value = ReadDocumentValue<T>((collectionId, docId), field, documentReader);
+                var value = ReadDocumentValue<T>((collectionId, docId), keyId, documentReader);
 
                 if (value != null)
                     yield return value;
@@ -138,7 +139,7 @@ namespace Sir.Search
 
         public T ReadDocumentValue<T>(
             (ulong collectionId, long docId) doc,
-            string field,
+            long keyId,
             DocumentReader streamReader)
         {
             var docInfo = streamReader.GetDocumentAddress(doc.docId);
@@ -148,10 +149,8 @@ namespace Sir.Search
             for (int i = 0; i < docMap.Count; i++)
             {
                 var kvp = docMap[i];
-                var kInfo = streamReader.GetAddressOfKey(kvp.keyId);
-                var key = (string)streamReader.GetKey(kInfo.offset, kInfo.len, kInfo.dataType);
 
-                if (key == field)
+                if (kvp.keyId == keyId)
                 {
                     var vInfo = streamReader.GetAddressOfValue(kvp.valId);
 
@@ -243,10 +242,10 @@ namespace Sir.Search
 
             DocumentReader reader;
 
-            if (!_streamReaders.TryGetValue(collectionId, out reader))
+            if (!_documentReaders.TryGetValue(collectionId, out reader))
             {
-                reader = new DocumentReader(_directory, collectionId, Database);
-                _streamReaders.Add(collectionId, reader);
+                reader = new DocumentReader(_directory, collectionId, _database);
+                _documentReaders.Add(collectionId, reader);
             }
 
             return reader;
@@ -254,7 +253,7 @@ namespace Sir.Search
 
         public virtual void Dispose()
         {
-            foreach (var reader in _streamReaders.Values)
+            foreach (var reader in _documentReaders.Values)
             {
                 reader.Dispose();
             }

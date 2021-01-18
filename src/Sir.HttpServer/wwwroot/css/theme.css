@@ -1,6 +1,6 @@
 ﻿body {
     padding: 0px 0px 0px 0px;
-    margin: 10px 10px 0px 10px;
+    margin: 0px 0px 0px 0px;
     font-family: Arial, sans-serif;
     font-size: medium;
     background-color:black;
@@ -84,6 +84,8 @@ ul.document-list li {
 
 .outer-container {
     max-width: 935px;
+    margin-left: 10px;
+    margin-right:10px;
 }
 
 .sub {
@@ -297,26 +299,31 @@ footer p.footer-hero{
     font-size:9pt;
 }
 
-footer {
+nav {
     font-size: 10pt;
-    margin-top: 10px;
-    margin-bottom: 30px;
+    margin-top: 0px;
+    margin-bottom: 10px;
     min-height: 7px;
     background-color: #151515;
-    padding: 5px 5px 5px 5px;
-    max-width: 925px;
+    padding: 5px 5px 5px 10px;
 }
 
-footer a {
+nav a {
     text-decoration: none;
     color: #ff7700;
 }
 
-.footer-nav {
+.nav-nav {
     color: silver;
 }
 
-footer p {
+.nav-nav span {
+    color: black;
+    margin-left:1px;
+    margin-right:1px;
+}
+
+nav p {
     margin-top: 10px;
 }
 
